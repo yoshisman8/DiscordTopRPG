@@ -10,9 +10,11 @@ namespace DiscordTopRPG.Database
 		public Resource Stamina { get; set; } = new Resource() { Score = AbilityScore.Con };
 		public Resource Pain { get; set; } = new Resource() { Score = AbilityScore.Int };
 		public Resource Focus { get; set; } = new Resource() { Max = 3 };
-		public Resource Burnout { get; set; } = new Resource() { Max = 3};
+		public Resource Burnout { get; set; } = new Resource() { Max = 3 };
 		public Stat[] AbilityScores { get; set; } = new Stat[7];
-		public List<Skill> Skills { get; set; } = new List<Skill>()
+		public Skill Fortitude { get; set; } = new Skill() { Name = "Fortitude", Score = AbilityScore.Str };
+		public Skill WillPower { get; set; } = new Skill() { Name = "Willpower", Score = AbilityScore.Cha };
+		public List<Skill> BaseSkills { get; set; } = new List<Skill>()
 		{
 			new Skill(){Name="Aim",Score=AbilityScore.Dex},
 			new Skill(){Name="Acrobatics",Score=AbilityScore.Agi},
@@ -55,19 +57,20 @@ namespace DiscordTopRPG.Database
 	public enum AbilityScore
 	{
 		None = -1,
-		Strength=0,
-		Str=0,
-		Dexterity=1,
-		Dex=1,
-		Agility=2,
-		Agi=2,
-		Constitution=3,
-		Con=3,
-		Memory=4,
-		Mem=4,
-		Intution=5,
-		Int=5,
-		Charisma=6,
-		Cha=6
+		Strength = 0,
+		Str = 0,
+		Dexterity = 1,
+		Dex = 1,
+		Agility = 2,
+		Agi = 2,
+		Constitution = 3,
+		Con = 3,
+		Memory = 4,
+		Mem = 4,
+		Intution = 5,
+		Int = 5,
+		Charisma = 6,
+		Cha = 6
 	}
+	public enum AblityShort { None = -1, Str, Dex, Agi, Con, Mem, Int, Cha }
 }

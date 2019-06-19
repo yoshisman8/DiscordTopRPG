@@ -18,9 +18,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Database\World\" />
     <Folder Include="Modules\" />
-    <Folder Include="Services\" />
   </ItemGroup>
 
 </Project>

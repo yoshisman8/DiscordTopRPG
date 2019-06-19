@@ -19,6 +19,7 @@ namespace DiscordTopRPG.Database
 	public class Weapon : Item
 	{
 		public string DamageDice { get; set; }
+		public AbilityScore Score { get; set; }
 	}
 	public class Consumable : Item
 	{
