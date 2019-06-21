@@ -26,6 +26,7 @@ namespace DiscordTopRPG.Services
         private CommandCacheService _cache;
         private bool Ready = false;
 
+		public Dictionary<ulong,ulong> CommandCache { get; set; }
         public CommandHandlingService(IConfiguration config, IServiceProvider provider, DiscordSocketClient discord, CommandService commands, CommandCacheService cache,InteractiveService interactive)
         {
             _discord = discord;
@@ -34,6 +35,8 @@ namespace DiscordTopRPG.Services
             _config = config;
             _interactive = interactive;
             _cache = cache;
+
+			CommandCache = new Dictionary<ulong, ulong>();
             
             _discord.MessageReceived += MessageReceived;
             _discord.MessageUpdated += OnMessageUpdated;
