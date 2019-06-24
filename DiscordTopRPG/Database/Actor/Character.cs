@@ -13,10 +13,11 @@ namespace DiscordTopRPG.Database
 		[BsonId]
 		public int Id { get; set; }
 		public ulong Owner { get; set; }
+		public ulong Guild { get; set; }
 		public string Bio { get; set; } = null;
-		public int UpgradePoints { get; set; }
-		public int TotalUP { get; set; }
-		public DateTime CreatedAt { get; set; }
+		public int UpgradePoints { get; set; } = 100;
+		public int TotalUP { get; set; } = 0;
+		public DateTime CreatedAt { get; set; } = DateTime.Now;
 		public List<Skill> CustomSkills { get; set; } = new List<Skill>();
 		public Inventory Inventory { get; set; } = new Inventory();
 		public List<Skill> Skills
@@ -27,6 +28,7 @@ namespace DiscordTopRPG.Database
 			}
 			set
 			{
+				Skills = value;
 			}
 		}
 		public Embed[] GetSheet(SocketCommandContext Context)
@@ -105,6 +107,11 @@ namespace DiscordTopRPG.Database
 				return skill.Ranks + sc + pen;
 			}
 			return skill.Ranks + sc;
+		}
+		public bool Save(LiteDatabase database)
+		{
+			var col = database.GetCollection<Character>("Characters");
+			return col.Update(this);
 		}
 	}
 }

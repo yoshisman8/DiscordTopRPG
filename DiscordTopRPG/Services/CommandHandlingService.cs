@@ -21,19 +21,19 @@ namespace DiscordTopRPG.Services
         private readonly DiscordSocketClient _discord;
         private readonly CommandService _commands;
         private IServiceProvider _provider;
-        private InteractiveService _interactive;
+        private LiteDatabase _database;
         private readonly IConfiguration _config;
         private CommandCacheService _cache;
         private bool Ready = false;
 
 		public Dictionary<ulong,ulong> CommandCache { get; set; }
-        public CommandHandlingService(IConfiguration config, IServiceProvider provider, DiscordSocketClient discord, CommandService commands, CommandCacheService cache,InteractiveService interactive)
+        public CommandHandlingService(IConfiguration config, IServiceProvider provider, DiscordSocketClient discord, CommandService commands, CommandCacheService cache,LiteDatabase database)
         {
             _discord = discord;
             _commands = commands;
             _provider = provider;
             _config = config;
-            _interactive = interactive;
+            _database = database;
             _cache = cache;
 
 			CommandCache = new Dictionary<ulong, ulong>();
@@ -46,7 +46,7 @@ namespace DiscordTopRPG.Services
 
 		public async Task OnJoinedGuild(SocketGuild arg)
         {
-            var col = Program.Database.GetCollection<Server>("Guilds");
+            var col = _database.GetCollection<Server>("Guilds");
 			if (col.Exists(x => x.Id == arg.Id)) return;
             col.Insert(new Server() {Id=arg.Id});
         }
@@ -54,13 +54,13 @@ namespace DiscordTopRPG.Services
 
         public async Task OnReady()
         {
-            await InitializeGuildsDB(_discord, Program.Database);
+            await InitializeGuildsDB(_discord, _database);
             Ready = true;
         }
 
         private async Task InitializeGuildsDB(DiscordSocketClient discord, LiteDatabase database)
         {
-            var col = database.GetCollection<Server>("Guilds");
+            var col = database.GetCollection<Server>("Servers");
             var joined = discord.Guilds.Select(x=> x.Id).ToList();
             foreach (var x in joined)
             {
@@ -78,19 +78,15 @@ namespace DiscordTopRPG.Services
             var OldMsg = await _OldMsg.DownloadAsync();
             if (OldMsg== null||NewMsg==null) return;
             if (OldMsg.Source != MessageSource.User||NewMsg.Source != MessageSource.User) return;
-            
-            if(_cache.TryGetValue(NewMsg.Id, out var CacheMsg))
-            {
-                var reply = await Channel.GetMessageAsync(CacheMsg.First());
-                await reply.DeleteAsync();
-            }
-            await MessageReceived(NewMsg);
+			await MessageReceived(NewMsg);	
         }
 
         public async Task InitializeAsync(IServiceProvider provider)
         {
             _provider = provider;
-            await _commands.AddModulesAsync(Assembly.GetEntryAssembly(),_provider);
+			_commands.AddTypeReader<Character[]>(new CharacterTypeReader());
+			_commands.AddTypeReader<Character>(new CharacterReader());
+			await _commands.AddModulesAsync(Assembly.GetEntryAssembly(),_provider);
             // Add additional initialization code here...
         }
 
@@ -101,7 +97,7 @@ namespace DiscordTopRPG.Services
             if (message.Source != MessageSource.User) return;
 
             var context = new SocketCommandContext(_discord, message);
-            var Guild = (context.Guild==null)?null:Program.Database.GetCollection<Server>("Guilds").FindOne(x=>x.Id==context.Guild.Id);
+            var Guild = (context.Guild==null)?null:_database.GetCollection<Server>("Guilds").FindOne(x=>x.Id==context.Guild.Id);
 
             int argPos = 0;
             if (Guild!= null && !message.HasStringPrefix(Guild.Prefix, ref argPos) && !message.HasMentionPrefix(_discord.CurrentUser, ref argPos)) return;

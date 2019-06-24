@@ -15,8 +15,37 @@ namespace DiscordTopRPG.Services
 		public TypeReaders(CommandService command)
 		{
 			CommandService = command;
-			CommandService.AddTypeReader<Character[]>(new CharacterTypeReader());
-			CommandService.AddTypeReader<Character>(new CharacterReader());
+			
+		}
+	}
+	public class RequiresUP : PreconditionAttribute
+	{
+		private int UP;
+		public RequiresUP(int Amount)
+		{
+			UP = Amount;
+		}
+		public override async Task<PreconditionResult> CheckPermissionsAsync(ICommandContext context, CommandInfo command, IServiceProvider services)
+		{
+			var col = ((LiteDatabase)services.GetService(typeof(LiteDatabase))).GetCollection<Player>("Players");
+			var player = col.IncludeAll().FindOne(x => x.Id == context.User.Id);
+			if (player == null)
+			{
+				col.Insert(new Player() { Id = context.User.Id });
+				player = col.IncludeAll().FindOne(x => x.Id == context.User.Id);
+			}
+			if (context.Guild == null) return PreconditionResult.FromError("This command can only be run inside servers.");
+			if (!player.ActiveCharacter.TryGetValue(context.Guild.Id, out Character C))
+			{
+				return PreconditionResult.FromError("You have no active character in this server.");
+			}
+			if (C.UpgradePoints < UP)
+			{
+				return PreconditionResult.FromError("This character doesn't have enough Upgrade Points for this. (Need " + UP + ", Have " + C.UpgradePoints + ")");
+			}
+			C.UpgradePoints -= UP;
+			C.Save((LiteDatabase)services.GetService(typeof(LiteDatabase)));
+			return PreconditionResult.FromSuccess();
 		}
 	}
 	public class CharacterTypeReader : TypeReader
@@ -24,24 +53,20 @@ namespace DiscordTopRPG.Services
 		public async  override Task<TypeReaderResult> ReadAsync(ICommandContext context, string input, IServiceProvider services)
 		{
 			LiteDatabase database = (LiteDatabase)services.GetService(typeof(LiteDatabase));
-			if(context.Guild== null)
+			if (context.Guild == null)
 			{
-				var Pcol = database.GetCollection<Player>("Players");
-				var player = Pcol.FindOne(x => x.Id == context.User.Id);
-				if (player == null)
-				{
-					Pcol.Insert(new Player() { Id = context.User.Id });
-					return TypeReaderResult.FromError(CommandError.ObjectNotFound, "You have no characters to your name.");
-				}
-			}
-			else
-			{
-				var guild = database.GetCollection<Server>("Servers").IncludeAll().FindOne(x=>x.Id==context.Guild.Id);
-				var results = guild.Characters.Where(x => x.Name.StartsWith(input, StringComparison.InvariantCultureIgnoreCase)).ToArray();
+				var collection = database.GetCollection<Character>("Characters");
+				var results = collection.Find(x => x.Owner == context.User.Id && x.Name.StartsWith(input, StringComparison.InvariantCultureIgnoreCase)).ToArray();
 				if (results.Length == 0) return TypeReaderResult.FromError(CommandError.ObjectNotFound, "No characters were found");
 				else return TypeReaderResult.FromSuccess(results);
 			}
-			return TypeReaderResult.FromError(CommandError.ObjectNotFound,"No characters were found");
+			else
+			{
+				var col = database.GetCollection<Character>("Characters");
+				var results = col.Find(x => x.Guild == context.Guild.Id && x.Name.StartsWith(input, StringComparison.InvariantCultureIgnoreCase)).ToArray();
+				if (results.Length == 0) return TypeReaderResult.FromError(CommandError.ObjectNotFound, "No characters were found");
+				else return TypeReaderResult.FromSuccess(results);
+			}
 		}
 	}
 	public class CharacterReader : TypeReader
@@ -51,18 +76,23 @@ namespace DiscordTopRPG.Services
 			LiteDatabase database = (LiteDatabase)services.GetService(typeof(LiteDatabase));
 			if (context.Guild == null)
 			{
-				var Pcol = database.GetCollection<Player>("Players");
-				var player = Pcol.FindOne(x => x.Id == context.User.Id);
-				if (player == null)
+				var collection = database.GetCollection<Character>("Characters");
+				var results = collection.Find(x => x.Owner == context.User.Id && x.Name.StartsWith(input, StringComparison.InvariantCultureIgnoreCase)).ToArray();
+				if (results.Length == 0) return TypeReaderResult.FromError(CommandError.ObjectNotFound, "No characters were found");
+				else if (results.Length > 1 && context.GetType() == typeof(SocketCommandContext))
 				{
-					Pcol.Insert(new Player() { Id = context.User.Id });
-					return TypeReaderResult.FromError(CommandError.ObjectNotFound, "You have no characters to your name.");
+					var MenuService = (MenuService)services.GetService(typeof(MenuService));
+					var menu = new SelectorMenu("Mutiple Characters were found, please pick one:", results.Select(x => x.Name).ToArray(), results);
+					await MenuService.CreateMenu((SocketCommandContext)context, menu, true);
+					var picked = (Character)await menu.GetSelectedObject();
+					return TypeReaderResult.FromSuccess(picked);
 				}
+				else return TypeReaderResult.FromSuccess(results[0]);
 			}
 			else
 			{
-				var guild = database.GetCollection<Server>("Servers").IncludeAll().FindOne(x => x.Id == context.Guild.Id);
-				var results = guild.Characters.Where(x => x.Name.StartsWith(input, StringComparison.InvariantCultureIgnoreCase)).ToArray();
+				var col = database.GetCollection<Character>("Characters");
+				var results = col.Find(x =>x.Guild==context.Guild.Id && x.Name.StartsWith(input, StringComparison.InvariantCultureIgnoreCase)).ToArray();
 				if (results.Length == 0) return TypeReaderResult.FromError(CommandError.ObjectNotFound, "No characters were found");
 				else if (results.Length > 1 && context.GetType()==typeof(SocketCommandContext))
 				{
@@ -74,7 +104,6 @@ namespace DiscordTopRPG.Services
 				}
 				else return TypeReaderResult.FromSuccess(results[0]);
 			}
-			return TypeReaderResult.FromError(CommandError.ObjectNotFound, "No characters were found");
 		}
 	}
 }

@@ -22,5 +22,15 @@ namespace DiscordTopRPG.Database
 				ActiveCharacter.Add(Server, character);
 			}
 		}
+		public bool Save(LiteDatabase database)
+		{
+			var col = database.GetCollection<Player>("Players");
+			if (col.Exists(x => x.Id == this.Id)) return col.Update(this);
+			else
+			{
+				col.Insert(this);
+				return true;
+			}
+		}
 	}
 }

@@ -26,66 +26,40 @@ namespace DiscordTopRPG.Services
 		/// <summary>
 		/// Current Player entry of invoking user.
 		/// </summary>
-		public Player Player
+		public Player GetPlayer()
 		{
-			get
+			if (!Database.GetCollection<Player>("Players").Exists(x=>x.Id==Context.User.Id))
 			{
-				if (!Database.GetCollection<Player>("Players").Exists(x=>x.Id==Context.User.Id))
-				{
-					Database.GetCollection<Player>("Players").Insert(new Player { Id = Context.User.Id });
-				}
-				return	Database.GetCollection<Player>("Players").IncludeAll().FindOne(x => x.Id == Context.User.Id);
+				Database.GetCollection<Player>("Players").Insert(new Player { Id = Context.User.Id });
 			}
-			set
-			{
-				Database.GetCollection<Player>("Players").Update(value);
-			}
+			return	Database.GetCollection<Player>("Players").IncludeAll().FindOne(x => x.Id == Context.User.Id);
 		}
 		/// <summary>
 		/// Current Server. Returns null on non-guild contexts.
 		/// </summary>
-		public Server Server
+		public Server GetServer()
 		{
-			get
+			if (Context.Guild == null) return null;
+			else
 			{
-				if (Context.Guild == null) return null;
-				else
-				{
-					return Database.GetCollection<Server>("Servers")
-						.IncludeAll()
-						.FindOne(x => x.Id == Context.Guild.Id);
-				}
-			}
-			set
-			{
-				var col = Database.GetCollection<Server>("Servers");
-				col.Update(value);
+				return Database.GetCollection<Server>("Servers")
+					.FindOne(x => x.Id == Context.Guild.Id);
 			}
 		}
 		/// <summary>
 		/// The current character file active on this server.
 		/// </summary>
-		public Character Character
+		public Character GetCharacter()
 		{
-			get
+			if (Context.Guild == null) return null;
+			else
 			{
-				if (Context.Guild == null) return null;
-				else
+				var player = GetPlayer();
+				if (!player.ActiveCharacter.TryGetValue(Context.Guild.Id, out Character c))
 				{
-					var player= Database.GetCollection<Player>("Players")
-						.IncludeAll()
-						.FindOne(x => x.Id == Context.User.Id);
-					if (!player.ActiveCharacter.TryGetValue(Context.Guild.Id, out Character c))
-					{
-						return null;
-					}
-					else return c;
+					return null;
 				}
-			}
-			set
-			{
-				var col = Database.GetCollection<Character>("Characters");
-				col.Update(value);
+				else return c;
 			}
 		}
 		public async Task<RestUserMessage> ReplyAsync(string content, bool isTTS = false,Embed embed = null)
@@ -104,5 +78,30 @@ namespace DiscordTopRPG.Services
 				return msg;
 			}
 		}
+		public async Task<RestUserMessage> CreateMenu(Menu Menu,bool FromUser)
+		{
+			return await MenuService.CreateMenu(Context, Menu,FromUser);
+		}
+		public async Task SendPagedMenu(string Name, Embed[] Pages)
+		{
+			var menu = new PagedEmbed(Name, Pages);
+			await MenuService.CreateMenu(Context, menu, false);
+		}
+		public void DeleteCharacter(Character character)
+		{
+			var col = Database.GetCollection<Character>("Characters");
+			col.Delete(character.Id);
+			var players = Database.GetCollection<Player>("Players");
+			var p = players.FindOne(x => x.Id == Context.User.Id);
+			if(p.ActiveCharacter.TryGetValue(character.Guild,out Character C))
+			{
+				if( C == character)
+				{
+					p.SetActive(character.Guild,null);
+					players.Update(p);
+				}
+			}
+		}
 	}
+	
 }

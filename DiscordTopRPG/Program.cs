@@ -16,7 +16,6 @@ namespace DiscordTopRPG
 {
 	class Program
 	{
-		public static LiteDatabase Database = new LiteDatabase(Path.Combine(Directory.GetCurrentDirectory(), "Data", "Database.db"));
 		static void Main(string[] args)
 			=> new Program().MainAsync().GetAwaiter().GetResult();
 
@@ -56,6 +55,7 @@ namespace DiscordTopRPG
 				.AddSingleton<LogService>()
 				// Extra
 				.AddSingleton(_config)
+				.AddSingleton(new LiteDatabase(Path.Combine(Directory.GetCurrentDirectory(), "Data", "Database.db")))
 				.AddSingleton(new CommandCacheService(_client))
 				.AddSingleton(new InteractiveService(_client))
 				.AddSingleton(new MenuService(_client))
