@@ -13,13 +13,13 @@ namespace DiscordTopRPG.Modules
 	public class Admin_Commands : DiscordTopBase<SocketCommandContext>
 	{
 		[Command("SetPrefix"),Alias("Prefix")]
-		[RequireContext(ContextType.Guild)] [RequireUserPermission(Discord.GuildPermission.ManageGuild)]
+		[RequireContext(ContextType.Guild)] [RequireUserPermission(GuildPermission.ManageGuild)]
 		[Summary("Set the prefix for this server. Only the first character is used.")]
 		public async Task SetPrefix([Remainder]string Prefix)
 		{
 			var g = GetServer();
 			g.Prefix = Prefix.Substring(0, 1);
-			g.Save(Database);
+			SaveServer(g);
 			await ReplyAsync(Context.User.Mention + ", Prefix changed to `" + g.Prefix + "`.");
 		}
 		[Command("Server"),Alias("Guild")]

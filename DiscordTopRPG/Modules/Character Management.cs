@@ -18,31 +18,43 @@ namespace DiscordTopRPG.Modules
 		[RequireContext(ContextType.Guild)]
 		public async Task CurrChar()
 		{
-			if(GetCharacter() == null)
+			var c = GetCharacter();
+			if (c == null)
 			{
 				await ReplyAsync(Context.User.Mention + ", You don't have an active character on this server.");
 				return;
 			}
-			await SendPagedMenu(GetCharacter().Name+"'s Character Sheet",GetCharacter().GetSheet(Context));
+			await SendPlayerSheet(GetCharacter());
 		}
 		[Command("Char")]
 		[Alias("Character", "Sheet")]
 		[Summary("Find and display a character on the server. If used through DMs it will look through all your created characters.")]
 		public async Task GetCharr([Remainder]Character Character)
 		{
-			await SendPagedMenu(Character.Name + "'s Character Sheet", Character.GetSheet(Context));
+			await SendPlayerSheet(Character);
 		}
 		[Command("CreateCharacter"),Alias("CreateChar","NewChar","NewCharacter","CC")]
 		[RequireContext(ContextType.Guild)]
 		public async Task NewCharG([Remainder]string Name)
 		{
+			// Get the character collection
 			var col = Database.GetCollection<Character>("Characters");
-			var chr = new Character() { Name = Name, Owner = Context.User.Id, CreatedAt = DateTime.Now };
-			chr.Id = col.Insert(chr);
+
+			// Creates new Character file allows duplicate names since selector handles multiple results.
+			var chr = new Character() { Name = Name, Owner = Context.User.Id, CreatedAt = DateTime.Now, Guild = Context.Guild.Id };
+			// Adds character to the database, returns id
+			var id = col.Insert(chr);
+			chr = col.FindOne(x=>x.Id==id.AsInt32);
+			// Index stuff
 			col.EnsureIndex("Name", "LOWER($.Name)");
+			col.EnsureIndex(x => x.Guild);
+
+			// Get the active player data and set this character as the active one for this server.
 			var p = GetPlayer();
-			p.SetActive(Context.Guild.Id, chr);
-			p.Save(Database);
+			p.SetActive(Context.Guild.Id, chr.Id);
+
+			// Save the character
+			SavePlayer(p);
 			await ReplyAsync("Created **" + Name + "**'s character sheet. You have been granted 100 UP to start creating your character. This character has also been set as your active character.");
 		}
 		[Command("DeleteCharacter"),Alias("DelChar","RemChar","RemoveCharacer","DelCharacter","RemCharacter")]
@@ -82,7 +94,7 @@ namespace DiscordTopRPG.Modules
 			var c = GetCharacter();
 			string old = c.Name;
 			c.Name = New_Name;
-			c.Save(Database);
+			SaveCharacter(c);
 			await ReplyAsync(Context.User.Mention + ", Renamed "+old+" to "+New_Name);
 		}
 	}

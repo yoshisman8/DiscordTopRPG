@@ -35,16 +35,18 @@ namespace DiscordTopRPG.Services
 				player = col.IncludeAll().FindOne(x => x.Id == context.User.Id);
 			}
 			if (context.Guild == null) return PreconditionResult.FromError("This command can only be run inside servers.");
-			if (!player.ActiveCharacter.TryGetValue(context.Guild.Id, out Character C))
+			if (!player.ActiveCharacter.TryGetValue(context.Guild.Id, out int C))
 			{
 				return PreconditionResult.FromError("You have no active character in this server.");
 			}
-			if (C.UpgradePoints < UP)
+			var ccol = ((LiteDatabase)services.GetService(typeof(LiteDatabase))).GetCollection<Character>("Character");
+			var character = ccol.FindOne(x => x.Id == C);
+			if (character.UpgradePoints < UP)
 			{
-				return PreconditionResult.FromError("This character doesn't have enough Upgrade Points for this. (Need " + UP + ", Have " + C.UpgradePoints + ")");
+				return PreconditionResult.FromError("This character doesn't have enough Upgrade Points for this. (Need " + UP + ", Have " + character.UpgradePoints + ")");
 			}
-			C.UpgradePoints -= UP;
-			C.Save((LiteDatabase)services.GetService(typeof(LiteDatabase)));
+			character.UpgradePoints -= UP;
+			ccol.Update(character);
 			return PreconditionResult.FromSuccess();
 		}
 	}

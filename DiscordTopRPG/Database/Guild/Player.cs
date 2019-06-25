@@ -9,9 +9,8 @@ namespace DiscordTopRPG.Database
 	{
 		[BsonId]
 		public ulong Id { get; set; }
-		[BsonRef("Characters")]
-		public Dictionary<ulong, Character> ActiveCharacter { get; set; } = new Dictionary<ulong, Character>();
-		public void SetActive(ulong Server, Character character)
+		public Dictionary<ulong, int> ActiveCharacter { get; set; } = new Dictionary<ulong, int>();
+		public void SetActive(ulong Server, int character)
 		{
 			if(ActiveCharacter.ContainsKey(Server))
 			{
@@ -20,16 +19,6 @@ namespace DiscordTopRPG.Database
 			else
 			{
 				ActiveCharacter.Add(Server, character);
-			}
-		}
-		public bool Save(LiteDatabase database)
-		{
-			var col = database.GetCollection<Player>("Players");
-			if (col.Exists(x => x.Id == this.Id)) return col.Update(this);
-			else
-			{
-				col.Insert(this);
-				return true;
 			}
 		}
 	}

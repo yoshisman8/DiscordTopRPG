@@ -24,7 +24,6 @@ namespace DiscordTopRPG.Services
         private LiteDatabase _database;
         private readonly IConfiguration _config;
         private CommandCacheService _cache;
-        private bool Ready = false;
 
 		public Dictionary<ulong,ulong> CommandCache { get; set; }
         public CommandHandlingService(IConfiguration config, IServiceProvider provider, DiscordSocketClient discord, CommandService commands, CommandCacheService cache,LiteDatabase database)
@@ -41,37 +40,37 @@ namespace DiscordTopRPG.Services
             _discord.MessageReceived += MessageReceived;
             _discord.MessageUpdated += OnMessageUpdated;
             _discord.JoinedGuild += OnJoinedGuild;
-            _discord.Ready += OnReady;
+			_discord.Ready += OnClientReady;
         }
+
+		private async Task OnClientReady()
+		{
+			await InitializeGuildsDB();
+		}
 
 		public async Task OnJoinedGuild(SocketGuild arg)
         {
-            var col = _database.GetCollection<Server>("Guilds");
+            var col = _database.GetCollection<Server>("Servers");
 			if (col.Exists(x => x.Id == arg.Id)) return;
             col.Insert(new Server() {Id=arg.Id});
         }
 
 
-        public async Task OnReady()
+        private Task InitializeGuildsDB()
         {
-            await InitializeGuildsDB(_discord, _database);
-            Ready = true;
-        }
-
-        private async Task InitializeGuildsDB(DiscordSocketClient discord, LiteDatabase database)
-        {
-            var col = database.GetCollection<Server>("Servers");
-            var joined = discord.Guilds.Select(x=> x.Id).ToList();
+            var col = _database.GetCollection<Server>("Servers");
+            var joined = _discord.Guilds;
             foreach (var x in joined)
             {
-                if (!col.Exists(y =>y.Id == x))
+                if (!col.Exists(y =>y.Id == x.Id))
                 {
                     col.Insert(new Server()
                     {
-                        Id = x
+                        Id = x.Id
                     });
                 }
             }
+			return Task.CompletedTask;
         }
 		public async Task OnMessageUpdated(Cacheable<IMessage, ulong> _OldMsg, SocketMessage NewMsg, ISocketMessageChannel Channel)
         {
@@ -97,7 +96,7 @@ namespace DiscordTopRPG.Services
             if (message.Source != MessageSource.User) return;
 
             var context = new SocketCommandContext(_discord, message);
-            var Guild = (context.Guild==null)?null:_database.GetCollection<Server>("Guilds").FindOne(x=>x.Id==context.Guild.Id);
+            var Guild = _database.GetCollection<Server>("Servers").FindOne(x=>x.Id==context.Guild.Id);
 
             int argPos = 0;
             if (Guild!= null && !message.HasStringPrefix(Guild.Prefix, ref argPos) && !message.HasMentionPrefix(_discord.CurrentUser, ref argPos)) return;

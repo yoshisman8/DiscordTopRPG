@@ -35,6 +35,24 @@ namespace DiscordTopRPG.Services
 			return	Database.GetCollection<Player>("Players").IncludeAll().FindOne(x => x.Id == Context.User.Id);
 		}
 		/// <summary>
+		/// Saves a player file.
+		/// </summary>
+		/// <param name="player">The player file.</param>
+		/// <returns>Whether or not the save was successful.</returns>
+		public bool SavePlayer(Player player)
+		{
+			var col = Database.GetCollection<Player>("Players");
+			if (!col.Exists(x => x.Id == player.Id))
+			{
+				col.Insert(player);
+				return true;
+			}
+			else
+			{
+				return col.Update(player);
+			}
+		}
+		/// <summary>
 		/// Current Server. Returns null on non-guild contexts.
 		/// </summary>
 		public Server GetServer()
@@ -47,6 +65,24 @@ namespace DiscordTopRPG.Services
 			}
 		}
 		/// <summary>
+		/// Updates a Server in the Database
+		/// </summary>
+		/// <param name="database">The LiteDatabase</param>
+		/// <returns>Returns False if it could not be saved.</returns>
+		public bool SaveServer(Server server)
+		{
+			var col = Database.GetCollection<Server>("Servers");
+			if (!col.Exists(x => x.Id == server.Id))
+			{
+				col.Insert(server);
+				return true;
+			}
+			else
+			{
+				return col.Update(server);
+			}
+		}
+		/// <summary>
 		/// The current character file active on this server.
 		/// </summary>
 		public Character GetCharacter()
@@ -55,11 +91,33 @@ namespace DiscordTopRPG.Services
 			else
 			{
 				var player = GetPlayer();
-				if (!player.ActiveCharacter.TryGetValue(Context.Guild.Id, out Character c))
+				if (!player.ActiveCharacter.TryGetValue(Context.Guild.Id, out int c))
 				{
 					return null;
 				}
-				else return c;
+				else
+				{
+					var cha = Database.GetCollection<Character>("Characters").FindOne(x => x.Id == c);
+					return cha;
+				}
+			}
+		}
+		/// <summary>
+		/// Saves or adds a characters to the database.
+		/// </summary>
+		/// <param name="database">The character file.</param>
+		/// <returns>Whether or not the file was saved.</returns>
+		public bool SaveCharacter(Character character)
+		{
+			var col = Database.GetCollection<Character>("Characters");
+			if (!col.Exists(x => x.Id == character.Id))
+			{
+				col.Insert(character);
+				return true;
+			}
+			else
+			{
+				return col.Update(character);
 			}
 		}
 		public async Task<RestUserMessage> ReplyAsync(string content, bool isTTS = false,Embed embed = null)
@@ -87,17 +145,22 @@ namespace DiscordTopRPG.Services
 			var menu = new PagedEmbed(Name, Pages);
 			await MenuService.CreateMenu(Context, menu, false);
 		}
+		public async Task SendPlayerSheet(Character character)
+		{
+			var menu = new SheetMenu(character.Name, character.GetSheet(Context));
+			await MenuService.CreateMenu(Context, menu, false);
+		}
 		public void DeleteCharacter(Character character)
 		{
 			var col = Database.GetCollection<Character>("Characters");
 			col.Delete(character.Id);
 			var players = Database.GetCollection<Player>("Players");
 			var p = players.FindOne(x => x.Id == Context.User.Id);
-			if(p.ActiveCharacter.TryGetValue(character.Guild,out Character C))
+			if(p.ActiveCharacter.TryGetValue(character.Guild,out int C))
 			{
-				if( C == character)
+				if( C == character.Id)
 				{
-					p.SetActive(character.Guild,null);
+					p.SetActive(character.Guild,-1);
 					players.Update(p);
 				}
 			}

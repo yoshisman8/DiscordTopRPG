@@ -23,18 +23,11 @@ namespace DiscordTopRPG.Database
 		/// <summary>
 		/// Condensed list of all items.
 		/// </summary>
-		public List<Item> Items
+		public List<Item> Items()
 		{
-			get
-			{
-				return new List<Item>().Concat(Wearables).Concat(Consumables).Concat(Weapons).Concat(Misc).ToList();
-			}
-			set
-			{
-				Items = value;
-			}
-
+			return new List<Item>().Concat(Wearables).Concat(Consumables).Concat(Weapons).Concat(Misc).ToList();
 		}
+			
 		public bool Wear(Wearable wearable)
 		{
 			try
@@ -60,10 +53,10 @@ namespace DiscordTopRPG.Database
 			{
 				if (Weapon!=null)
 				{
-					Items.Add(this.Weapon);
+					Weapons.Add(this.Weapon);
 				}
 				this.Weapon = weapon;
-				Items.Remove(weapon);
+				Weapons.Remove(weapon);
 				return true;
 			}
 			catch

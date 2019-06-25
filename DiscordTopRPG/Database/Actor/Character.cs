@@ -8,53 +8,92 @@ using LiteDB;
 
 namespace DiscordTopRPG.Database
 {
-	public class Character : Actor
+	public class Character 
 	{
 		[BsonId]
 		public int Id { get; set; }
+		public string Name { get; set; }
 		public ulong Owner { get; set; }
 		public ulong Guild { get; set; }
+		public string Icon { get; set; } = "https://image.flaticon.com/icons/png/512/64/64096.png";
 		public string Bio { get; set; } = null;
 		public int UpgradePoints { get; set; } = 100;
 		public int TotalUP { get; set; } = 0;
 		public DateTime CreatedAt { get; set; } = DateTime.Now;
-		public List<Skill> CustomSkills { get; set; } = new List<Skill>();
 		public Inventory Inventory { get; set; } = new Inventory();
-		public List<Skill> Skills
+		public Resource Stamina { get; set; } = new Resource() { Score = AbilityScore.Con };
+		public Resource Pain { get; set; } = new Resource() { Score = AbilityScore.Int };
+		public Resource Focus { get; set; } = new Resource() { Max = 3 };
+		public Resource Burnout { get; set; } = new Resource() { Max = 3 };
+		public Stat[] AbilityScores { get; set; } = new Stat[7]
+			{
+				new Stat(),
+				new Stat(),
+				new Stat(),
+				new Stat(),
+				new Stat(),
+				new Stat(),
+				new Stat()
+			};
+		public Skill Fortitude { get; set; } = new Skill() { Name = "Fortitude", Score = AbilityScore.Str };
+		public Skill WillPower { get; set; } = new Skill() { Name = "Willpower", Score = AbilityScore.Cha };
+		public List<Skill> BaseSkills { get; set; } = new List<Skill>()
 		{
-			get
-			{
-				return BaseSkills.Concat(CustomSkills).ToList();
-			}
-			set
-			{
-				Skills = value;
-			}
+			new Skill(){Name="Aim",Score=AbilityScore.Dex},
+			new Skill(){Name="Acrobatics",Score=AbilityScore.Agi},
+			new Skill(){Name="Athletics",Score=AbilityScore.Str},
+			new Skill(){Name="Block",Score=AbilityScore.Str},
+			new Skill(){Name="Crush",Score=AbilityScore.Str},
+			new Skill(){Name="Diplomacy",Score=AbilityScore.Cha},
+			new Skill(){Name="Evade",Score=AbilityScore.Agi},
+			new Skill(){Name="Heal",Score=AbilityScore.Int},
+			new Skill(){Name="Intimidate",Score=AbilityScore.Cha},
+			new Skill(){Name="Perception",Score=AbilityScore.Int},
+			new Skill(){Name="Recall",Score=AbilityScore.Mem},
+			new Skill(){Name="Ride",Score=AbilityScore.Agi},
+			new Skill(){Name="Sense Motive",Score=AbilityScore.Int},
+			new Skill(){Name="Slash",Score=AbilityScore.Str},
+			new Skill(){Name="Stab",Score=AbilityScore.Str},
+			new Skill(){Name="Stealth",Score=AbilityScore.Agi},
+			new Skill(){Name="Survival",Score=AbilityScore.Int},
+			new Skill(){Name="Throw",Score=AbilityScore.Str},
+		};
+		public List<Skill> CustomSkills { get; set; } = new List<Skill>();
+	
+		public List<Skill> GetSkills()
+		{
+			return BaseSkills.Concat(CustomSkills).ToList();
 		}
+
 		public Embed[] GetSheet(SocketCommandContext Context)
 		{
 			var user = Context.Client.GetUser(Owner);
 			var page1 = new EmbedBuilder()
-				.WithColor(new Color(114,137,218))
+				.WithColor(new Color(114, 137, 218))
 				.WithTitle(this.Name)
 				.WithTimestamp(this.CreatedAt)
 				.WithFooter(user.Username ?? "Someone Unkown", user.GetAvatarUrl() ?? null)
-				.WithDescription(Bio)
-				.AddField("Ability Scores", "```css\n💪 Strength     [" + AbilityScores[0].Score + "]\n👋 Dexterity    [" + AbilityScores[1].Score + "]\n🤸 Agility      [" + AbilityScores[2].Score + "]\n💗 Constitution [" + AbilityScores[3].Score + "]\n📖 Memory       [" + AbilityScores[4].Score + "]\n🧠 Intution     [" + AbilityScores[5].Score + "]\n👥 Charisma     [" + AbilityScores[6].Score + "]```", true)
-				.AddField("Stats", "```css\nStamina     [" + Stamina.Current + "/" + Stamina.Max + "]\nPain        [" + Pain.Current + "/" + Pain.Max + "]\nFortitude    " + GetSkillBonus(Fortitude).ToString("+#;-#;0") + "\nUpgrade Pts  " + UpgradePoints + "\nWillpower    " + GetSkillBonus(WillPower).ToString("+#;-#;0") + "\nFocus       [" + Focus.Current + "/" + Focus.Max + "]\nBurnout     [" + Burnout.Current + "/" + Burnout.Max + "]```", true);
-			var sb = new StringBuilder().AppendLine("Name                      Ranks    Total");
+				.WithDescription(Bio ?? "No Bio")
+				.WithThumbnailUrl(Icon)
+				.AddField("Ability Scores", "```css\nStrength    [" + AbilityScores[0].Get() + "]\nDexterity   [" + AbilityScores[1].Get() + "]\nAgility     [" + AbilityScores[2].Get() + "]\nConstitution[" + AbilityScores[3].Get() + "]\nMemory      [" + AbilityScores[4].Get() + "]\nIntution    [" + AbilityScores[5].Get() + "]\nCharisma    [" + AbilityScores[6].Get() + "]```", true)
+				.AddField("Stats", "```css\nStamina [" + Stamina.Current + "/" + Stamina.Max + "]\nPain [" + Pain.Current + "/" + Pain.Max + "]\nFortitude   " + GetSkillBonus(Fortitude).ToString("+#;-#;0") + "\nUpgrade Pts " + UpgradePoints + "\nWillpower " + GetSkillBonus(WillPower).ToString("+#;-#;0") + "\nFocus [" + Focus.Current + "/" + Focus.Max + "]\nBurnout [" + Burnout.Current + "/" + Burnout.Max + "]```", true);
+			var sb = new StringBuilder().AppendLine("```md\nName                      Ranks    Total");
 			sb.AppendLine("========================================");
-			foreach (var x in Skills)
+			foreach (var x in GetSkills())
 			{
 				// Name is max 27 chars
-				string name = string.Format("{0,-26}", x.Name + "(" + (AblityShort)x.Score + ")");
-				string ranks = string.Format("{0," + ((10 + x.Ranks.ToString().Length) / 2).ToString() + "}", x.Ranks);
-				string total = string.Format("{0,4}", GetSkillBonus(x).ToString("+#;-#;0"));
+				string name = string.Format("{0,-25}", x.Name + " <" + (AblityShort)x.Score + ">");
+				string ranks = string.Format("{0, -5}", x.Ranks);
+				string total = string.Format("{0,9}", GetSkillBonus(x).ToString("+#;-#;0"));
 				sb.AppendLine(name + ranks + total);
 			}
+			page1.AddField("Skills", sb.ToString()+"```");
+			sb.Clear();
+
 			var page2 = new EmbedBuilder()
 				.WithTitle(this.Name + "'s Inventory")
 				.WithTimestamp(this.CreatedAt)
+				.WithThumbnailUrl("https://static.thenounproject.com/png/2551-200.png")
 				.WithColor(new Color(114,137,218))
 				.WithFooter(user.Username ?? "Someone Unkown", user.GetAvatarUrl() ?? null)
 				.WithDescription("Money: $" + Inventory.Money.ToString("F"));
@@ -72,7 +111,7 @@ namespace DiscordTopRPG.Database
 			}
 			if (sb.Length > 0) page2.AddField("Worn Gear", sb.ToString());
 			sb.Clear();
-			foreach (var x in Inventory.Items.OrderBy(x => x.Name))
+			foreach (var x in Inventory.Items().OrderBy(x => x.Name))
 			{
 				if (x.GetType() == typeof(Wearable))
 				{
@@ -100,7 +139,7 @@ namespace DiscordTopRPG.Database
 		}
 		public int GetSkillBonus(Skill skill)
 		{
-			int sc = AbilityScores[(int)skill.Score].Score;
+			int sc = AbilityScores[(int)skill.Score].Get();
 			if ((int)skill.Score == (int)AbilityScore.Agility)
 			{
 				int pen = Inventory.Worn.Select(x => x.Penalty).Sum();
@@ -108,10 +147,43 @@ namespace DiscordTopRPG.Database
 			}
 			return skill.Ranks + sc;
 		}
-		public bool Save(LiteDatabase database)
-		{
-			var col = database.GetCollection<Character>("Characters");
-			return col.Update(this);
-		}
+		
 	}
+	public class Stat
+	{
+		public int Investment { get; set; } = 0;
+		public int Get() => 1+Investment;
+	}
+	public class Resource
+	{
+		public int Max { get; set; }
+		public int Current { get; set; }
+		public int Ranks { get; set; } = 0;
+		public AbilityScore Score { get; set; } = AbilityScore.None;
+	}
+	public class Skill
+	{
+		public string Name { get; set; }
+		public int Ranks { get; set; }
+		public AbilityScore Score { get; set; }
+	}
+	public enum AbilityScore
+	{
+		None = -1,
+		Strength = 0,
+		Str = 0,
+		Dexterity = 1,
+		Dex = 1,
+		Agility = 2,
+		Agi = 2,
+		Constitution = 3,
+		Con = 3,
+		Memory = 4,
+		Mem = 4,
+		Intution = 5,
+		Int = 5,
+		Charisma = 6,
+		Cha = 6
+	}
+	public enum AblityShort { None = -1, Str, Dex, Agi, Con, Mem, Int, Cha }
 }
