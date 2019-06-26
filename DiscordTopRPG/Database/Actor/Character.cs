@@ -17,14 +17,14 @@ namespace DiscordTopRPG.Database
 		public ulong Guild { get; set; }
 		public string Icon { get; set; } = "https://image.flaticon.com/icons/png/512/64/64096.png";
 		public string Bio { get; set; } = null;
-		public int UpgradePoints { get; set; } = 100;
+		public int UpgradePoints { get; set; } = 50;
 		public int TotalUP { get; set; } = 0;
 		public DateTime CreatedAt { get; set; } = DateTime.Now;
 		public Inventory Inventory { get; set; } = new Inventory();
-		public Resource Stamina { get; set; } = new Resource() { Score = AbilityScore.Con };
-		public Resource Pain { get; set; } = new Resource() { Score = AbilityScore.Int };
-		public Resource Focus { get; set; } = new Resource() { Max = 3 };
-		public Resource Burnout { get; set; } = new Resource() { Max = 3 };
+		public Resource Stamina { get; set; } = new Resource() { Base = 5, Score = AbilityScore.Con };
+		public Resource Focus { get; set; } = new Resource() { Base = 5, Score = AbilityScore.Int };
+		public Resource Pain { get; set; } = new Resource() { Base = 3 };
+		public Resource Burnout { get; set; } = new Resource() { Base = 3 };
 		public Stat[] AbilityScores { get; set; } = new Stat[7]
 			{
 				new Stat(),
@@ -68,6 +68,8 @@ namespace DiscordTopRPG.Database
 		public Embed[] GetSheet(SocketCommandContext Context)
 		{
 			var user = Context.Client.GetUser(Owner);
+			int stam = GetResourceMax(Stamina);
+			int focus = GetResourceMax(Focus);
 			var page1 = new EmbedBuilder()
 				.WithColor(new Color(114, 137, 218))
 				.WithTitle(this.Name)
@@ -76,10 +78,10 @@ namespace DiscordTopRPG.Database
 				.WithDescription(Bio ?? "No Bio")
 				.WithThumbnailUrl(Icon)
 				.AddField("Ability Scores", "```css\nStrength    [" + AbilityScores[0].Get() + "]\nDexterity   [" + AbilityScores[1].Get() + "]\nAgility     [" + AbilityScores[2].Get() + "]\nConstitution[" + AbilityScores[3].Get() + "]\nMemory      [" + AbilityScores[4].Get() + "]\nIntution    [" + AbilityScores[5].Get() + "]\nCharisma    [" + AbilityScores[6].Get() + "]```", true)
-				.AddField("Stats", "```css\nStamina [" + Stamina.Current + "/" + Stamina.Max + "]\nPain [" + Pain.Current + "/" + Pain.Max + "]\nFortitude   " + GetSkillBonus(Fortitude).ToString("+#;-#;0") + "\nUpgrade Pts " + UpgradePoints + "\nWillpower " + GetSkillBonus(WillPower).ToString("+#;-#;0") + "\nFocus [" + Focus.Current + "/" + Focus.Max + "]\nBurnout [" + Burnout.Current + "/" + Burnout.Max + "]```", true);
+				.AddField("Stats", "```css\nStamina [" + Stamina.Current + "/" + GetResourceMax(Stamina) + "]\nPain [" + Pain.Current + "/" + GetResourceMax(Pain) + "]\nFortitude   " + GetSkillBonus(Fortitude).ToString("+#;-#;0") + "\nUpgrade Pts " + UpgradePoints + "\nWillpower " + GetSkillBonus(WillPower).ToString("+#;-#;0") + "\nFocus [" + Focus.Current + "/" + GetResourceMax(Focus) + "]\nBurnout [" + Burnout.Current + "/" + GetResourceMax(Burnout) + "]```", true);
 			var sb = new StringBuilder().AppendLine("```md\nName                      Ranks    Total");
 			sb.AppendLine("========================================");
-			foreach (var x in GetSkills())
+			foreach (var x in GetSkills().OrderBy(x=>x.Name))
 			{
 				// Name is max 27 chars
 				string name = string.Format("{0,-25}", x.Name + " <" + (AblityShort)x.Score + ">");
@@ -147,16 +149,28 @@ namespace DiscordTopRPG.Database
 			}
 			return skill.Ranks + sc;
 		}
-		
+		public int GetResourceMax(Resource resource)
+		{
+			int x = resource.Base + resource.Ranks;
+			x += (int)resource.Score > -1 ? AbilityScores[(int)resource.Score].Get() : 0;
+			return x;
+		}
+		public void FullResture()
+		{
+			Stamina.Current = GetResourceMax(Stamina);
+			Focus.Current = GetResourceMax(Focus);
+			Pain.Current = 0;
+			Burnout.Current = 0;
+		}
 	}
 	public class Stat
 	{
 		public int Investment { get; set; } = 0;
-		public int Get() => 1+Investment;
+		public int Get() => Investment;
 	}
 	public class Resource
 	{
-		public int Max { get; set; }
+		public int Base { get; set; }
 		public int Current { get; set; }
 		public int Ranks { get; set; } = 0;
 		public AbilityScore Score { get; set; } = AbilityScore.None;

@@ -150,6 +150,12 @@ namespace DiscordTopRPG.Services
 			var menu = new SheetMenu(character.Name, character.GetSheet(Context));
 			await MenuService.CreateMenu(Context, menu, false);
 		}
+		public async Task<bool> SendConfirmationPrompt(string Message)
+		{
+			var menu = new ConfirmationMenu(Message);
+			await MenuService.CreateMenu(Context, menu, true);
+			return await menu.GetSelection();
+		}
 		public void DeleteCharacter(Character character)
 		{
 			var col = Database.GetCollection<Character>("Characters");

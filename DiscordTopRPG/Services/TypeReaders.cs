@@ -39,14 +39,13 @@ namespace DiscordTopRPG.Services
 			{
 				return PreconditionResult.FromError("You have no active character in this server.");
 			}
-			var ccol = ((LiteDatabase)services.GetService(typeof(LiteDatabase))).GetCollection<Character>("Character");
+			if (C==-1) return PreconditionResult.FromError("You have no active character in this server."); 
+			var ccol = ((LiteDatabase)services.GetService(typeof(LiteDatabase))).GetCollection<Character>("Characters");
 			var character = ccol.FindOne(x => x.Id == C);
 			if (character.UpgradePoints < UP)
 			{
 				return PreconditionResult.FromError("This character doesn't have enough Upgrade Points for this. (Need " + UP + ", Have " + character.UpgradePoints + ")");
 			}
-			character.UpgradePoints -= UP;
-			ccol.Update(character);
 			return PreconditionResult.FromSuccess();
 		}
 	}
@@ -59,7 +58,7 @@ namespace DiscordTopRPG.Services
 			{
 				var collection = database.GetCollection<Character>("Characters");
 				var results = collection.Find(x => x.Owner == context.User.Id && x.Name.StartsWith(input, StringComparison.InvariantCultureIgnoreCase)).ToArray();
-				if (results.Length == 0) return TypeReaderResult.FromError(CommandError.ObjectNotFound, "No characters were found");
+				if (results.Length == 0) return TypeReaderResult.FromError(CommandError.ObjectNotFound, "No characters whoes name start with \""+input+"\" were found");
 				else return TypeReaderResult.FromSuccess(results);
 			}
 			else
@@ -71,41 +70,31 @@ namespace DiscordTopRPG.Services
 			}
 		}
 	}
-	public class CharacterReader : TypeReader
+	public class SkillTypereader : TypeReader
 	{
 		public async override Task<TypeReaderResult> ReadAsync(ICommandContext context, string input, IServiceProvider services)
 		{
 			LiteDatabase database = (LiteDatabase)services.GetService(typeof(LiteDatabase));
-			if (context.Guild == null)
+			if (context.Guild == null) return TypeReaderResult.FromError(CommandError.UnmetPrecondition,"This command can only be used inside a server");
+			var Pcol = database.GetCollection<Player>("Players");
+			var player = Pcol.FindOne(x => x.Id == context.User.Id);
+			if (player == null)
 			{
-				var collection = database.GetCollection<Character>("Characters");
-				var results = collection.Find(x => x.Owner == context.User.Id && x.Name.StartsWith(input, StringComparison.InvariantCultureIgnoreCase)).ToArray();
-				if (results.Length == 0) return TypeReaderResult.FromError(CommandError.ObjectNotFound, "No characters were found");
-				else if (results.Length > 1 && context.GetType() == typeof(SocketCommandContext))
-				{
-					var MenuService = (MenuService)services.GetService(typeof(MenuService));
-					var menu = new SelectorMenu("Mutiple Characters were found, please pick one:", results.Select(x => x.Name).ToArray(), results);
-					await MenuService.CreateMenu((SocketCommandContext)context, menu, true);
-					var picked = (Character)await menu.GetSelectedObject();
-					return TypeReaderResult.FromSuccess(picked);
-				}
-				else return TypeReaderResult.FromSuccess(results[0]);
+				Pcol.Insert(new Player() { Id = context.User.Id });
+				player = Pcol.IncludeAll().FindOne(x => x.Id == context.User.Id);
 			}
-			else
+
+			if (!player.ActiveCharacter.TryGetValue(context.Guild.Id, out int C))
 			{
-				var col = database.GetCollection<Character>("Characters");
-				var results = col.Find(x =>x.Guild==context.Guild.Id && x.Name.StartsWith(input, StringComparison.InvariantCultureIgnoreCase)).ToArray();
-				if (results.Length == 0) return TypeReaderResult.FromError(CommandError.ObjectNotFound, "No characters were found");
-				else if (results.Length > 1 && context.GetType()==typeof(SocketCommandContext))
-				{
-					var MenuService = (MenuService)services.GetService(typeof(MenuService));
-					var menu = new SelectorMenu("Mutiple Characters were found, please pick one:", results.Select(x => x.Name).ToArray(), results);
-					await MenuService.CreateMenu((SocketCommandContext)context, menu, true);
-					var picked = (Character)await menu.GetSelectedObject();
-					return TypeReaderResult.FromSuccess(picked);
-				}
-				else return TypeReaderResult.FromSuccess(results[0]);
+				return TypeReaderResult.FromError(CommandError.ObjectNotFound,"You have no active character in this server.");
 			}
+			if (C == -1) return TypeReaderResult.FromError(CommandError.ObjectNotFound,"You have no active character in this server.");
+			var ccol = database.GetCollection<Character>("Characters");
+			var character = ccol.FindOne(x => x.Id == C);
+			var skills = character.GetSkills().Where(x => x.Name.StartsWith(input, StringComparison.CurrentCultureIgnoreCase)).OrderBy(x=>x.Name);
+			if (skills.Count() == 0) return TypeReaderResult.FromError(CommandError.ObjectNotFound, "A skill whose name starts with \"" + input + "\" could not be found.");
+			return TypeReaderResult.FromSuccess(skills.ToArray());
 		}
 	}
+
 }

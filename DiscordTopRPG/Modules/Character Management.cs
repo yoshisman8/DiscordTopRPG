@@ -7,6 +7,7 @@ using Discord.Commands;
 using LiteDB;
 using System.Threading.Tasks;
 using Discord.Addon.InteractiveMenus;
+using System.Linq;
 
 namespace DiscordTopRPG.Modules
 {
@@ -29,9 +30,22 @@ namespace DiscordTopRPG.Modules
 		[Command("Char")]
 		[Alias("Character", "Sheet")]
 		[Summary("Find and display a character on the server. If used through DMs it will look through all your created characters.")]
-		public async Task GetCharr([Remainder]Character Character)
+		public async Task GetCharr([Remainder]Character[] Character)
 		{
-			await SendPlayerSheet(Character);
+			if(Character.Length > 1)
+			{
+				List<string> names = new List<string>();
+				foreach (var x in Character)
+				{
+					var owner = Context.Client.GetUser(x.Owner);
+					names.Add(x.Name + " (By: " +(owner.Username??"Somebody Unknown")+")");
+				}
+				var menu = new SelectorMenu("Mutiple Characters were found, please pick one:", names.ToArray(), Character);
+				await MenuService.CreateMenu(Context, menu, true);
+				var picked = (Character)await menu.GetSelectedObject();
+				await SendPlayerSheet(picked);
+			}
+			else await SendPlayerSheet(Character[0]);
 		}
 		[Command("CreateCharacter"),Alias("CreateChar","NewChar","NewCharacter","CC")]
 		[RequireContext(ContextType.Guild)]
@@ -43,6 +57,7 @@ namespace DiscordTopRPG.Modules
 			// Creates new Character file allows duplicate names since selector handles multiple results.
 			var chr = new Character() { Name = Name, Owner = Context.User.Id, CreatedAt = DateTime.Now, Guild = Context.Guild.Id };
 			// Adds character to the database, returns id
+			chr.FullResture();
 			var id = col.Insert(chr);
 			chr = col.FindOne(x=>x.Id==id.AsInt32);
 			// Index stuff
@@ -55,29 +70,42 @@ namespace DiscordTopRPG.Modules
 
 			// Save the character
 			SavePlayer(p);
-			await ReplyAsync("Created **" + Name + "**'s character sheet. You have been granted 100 UP to start creating your character. This character has also been set as your active character.");
+			await ReplyAsync("Created **" + Name + "**'s character sheet. You have been granted 50 Upgrade Points to start creating your character. This character has also been set as your active character.");
 		}
 		[Command("DeleteCharacter"),Alias("DelChar","RemChar","RemoveCharacer","DelCharacter","RemCharacter")]
-		public async Task DelChar([Remainder]Character Character)
+		public async Task DelChar([Remainder]Character[] Character)
 		{
-			if (Character.Owner != Context.User.Id)
+			Character picked;
+			if (Character.Length > 1)
 			{
-				await ReplyAsync(Context.User.Mention + ", You do not own " + Character.Name + ".");
+				List<string> names = new List<string>();
+				foreach (var x in Character)
+				{
+					var owner = Context.Client.GetUser(x.Owner);
+					names.Add(x.Name + " (By: " + (owner.Username ?? "Somebody Unknown") + ")");
+				}
+				var menu = new SelectorMenu("Mutiple Characters were found, please pick one:", names.ToArray(), Character);
+				await MenuService.CreateMenu(Context, menu, true);
+				picked = (Character)await menu.GetSelectedObject();
+				await SendPlayerSheet(picked);
+			}
+			else picked = Character[0];
+			if (picked.Owner != Context.User.Id)
+			{
+				await ReplyAsync(Context.User.Mention + ", You do not own " + picked.Name + ".");
 				return;
 			}
-			var menu = new SelectorMenu("Are you sure you want to delete " + Character.Name + "?", new string[] { "No", "Yes" }, new object[] { false, true });
-			await CreateMenu(menu, true);
-			bool confirmation = (bool)await menu.GetSelectedObject();
+			var confirmation = await SendConfirmationPrompt("Are you sure you want to delete " + picked.Name + "?");
 			if (confirmation)
 			{
 				var col = Database.GetCollection<Character>("Characters");
-				col.Delete(Character.Id);
-				await ReplyAsync(Context.User.Mention + ", you have successfully deleted " + Character.Name + "'s sheet.");
+				DeleteCharacter(picked);
+				await ReplyAsync(Context.User.Mention + ", you have successfully deleted " + picked.Name + "'s sheet.");
 				return;
 			}
 			else
 			{
-				await ReplyAsync(Context.User.Mention + ", you have decided to keep " + Character.Name + "'s sheet.");
+				await ReplyAsync(Context.User.Mention + ", you have decided to keep " + picked.Name + "'s sheet.");
 				return;
 			}
 		}

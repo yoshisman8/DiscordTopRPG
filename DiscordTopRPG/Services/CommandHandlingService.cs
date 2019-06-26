@@ -84,7 +84,7 @@ namespace DiscordTopRPG.Services
         {
             _provider = provider;
 			_commands.AddTypeReader<Character[]>(new CharacterTypeReader());
-			_commands.AddTypeReader<Character>(new CharacterReader());
+			_commands.AddTypeReader<Skill[]>(new SkillTypereader());
 			await _commands.AddModulesAsync(Assembly.GetEntryAssembly(),_provider);
             // Add additional initialization code here...
         }
