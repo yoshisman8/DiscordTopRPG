@@ -12,15 +12,20 @@ namespace DiscordTopRPG.Database
 	{
 		[BsonId]
 		public int Id { get; set; }
+
+		#region Basic Info
 		public string Name { get; set; }
 		public ulong Owner { get; set; }
 		public ulong Guild { get; set; }
 		public string Icon { get; set; } = "https://image.flaticon.com/icons/png/512/64/64096.png";
 		public string Bio { get; set; } = null;
-		public int UpgradePoints { get; set; } = 50;
-		public int TotalUP { get; set; } = 0;
+		#endregion
+
+		public int Level { get; set; } = 1;
 		public DateTime CreatedAt { get; set; } = DateTime.Now;
 		public Inventory Inventory { get; set; } = new Inventory();
+		
+		#region Core Stats
 		public Resource Stamina { get; set; } = new Resource() { Base = 5, Score = AbilityScore.Con };
 		public Resource Focus { get; set; } = new Resource() { Base = 5, Score = AbilityScore.Int };
 		public Resource Pain { get; set; } = new Resource() { Base = 3 };
@@ -37,6 +42,10 @@ namespace DiscordTopRPG.Database
 			};
 		public Skill Fortitude { get; set; } = new Skill() { Name = "Fortitude", Score = AbilityScore.Str };
 		public Skill WillPower { get; set; } = new Skill() { Name = "Willpower", Score = AbilityScore.Cha };
+		#endregion
+	
+		#region Skills
+		public int UpgradePoints { get; set; } = 50;
 		public List<Skill> BaseSkills { get; set; } = new List<Skill>()
 		{
 			new Skill(){Name="Aim",Score=AbilityScore.Dex},
@@ -59,17 +68,41 @@ namespace DiscordTopRPG.Database
 			new Skill(){Name="Throw",Score=AbilityScore.Str},
 		};
 		public List<Skill> CustomSkills { get; set; } = new List<Skill>();
-	
+
+		
 		public List<Skill> GetSkills()
 		{
 			return BaseSkills.Concat(CustomSkills).ToList();
 		}
+		public double GetSkillBonus(Skill skill)
+		{
+			double sc = AbilityScores[(int)skill.Score].Get();
+			if ((int)skill.Score == (int)AbilityScore.Agility)
+			{
+				int pen = Inventory.Worn.Select(x => x.Penalty).Sum();
+				return skill.Ranks + sc + pen;
+			}
+			return skill.Ranks + sc;
+		}
+		public int GetMaxRanks()
+		{
+			return (7 + SkillBonus) * Level;
+		}
+		public int GetRemainingRanks()
+		{
+			return GetMaxRanks() - GetSkills().Select(x => x.Ranks).Sum();
+		}
+		#endregion
 
+		#region Upgrades
+		public int NaturalArmor { get; set; } = 0;
+		public int SkillBonus { get; set; } = 0;
+		public int NaturalWeaponLevel { get; set; } = 0;
+		
+		#endregion
 		public Embed[] GetSheet(SocketCommandContext Context)
 		{
 			var user = Context.Client.GetUser(Owner);
-			int stam = GetResourceMax(Stamina);
-			int focus = GetResourceMax(Focus);
 			var page1 = new EmbedBuilder()
 				.WithColor(new Color(114, 137, 218))
 				.WithTitle(this.Name)
@@ -77,9 +110,25 @@ namespace DiscordTopRPG.Database
 				.WithFooter(user.Username ?? "Someone Unkown", user.GetAvatarUrl() ?? null)
 				.WithDescription(Bio ?? "No Bio")
 				.WithThumbnailUrl(Icon)
-				.AddField("Ability Scores", "```css\nStrength    [" + AbilityScores[0].Get() + "]\nDexterity   [" + AbilityScores[1].Get() + "]\nAgility     [" + AbilityScores[2].Get() + "]\nConstitution[" + AbilityScores[3].Get() + "]\nMemory      [" + AbilityScores[4].Get() + "]\nIntution    [" + AbilityScores[5].Get() + "]\nCharisma    [" + AbilityScores[6].Get() + "]```", true)
-				.AddField("Stats", "```css\nStamina [" + Stamina.Current + "/" + GetResourceMax(Stamina) + "]\nPain [" + Pain.Current + "/" + GetResourceMax(Pain) + "]\nFortitude   " + GetSkillBonus(Fortitude).ToString("+#;-#;0") + "\nUpgrade Pts " + UpgradePoints + "\nWillpower " + GetSkillBonus(WillPower).ToString("+#;-#;0") + "\nFocus [" + Focus.Current + "/" + GetResourceMax(Focus) + "]\nBurnout [" + Burnout.Current + "/" + GetResourceMax(Burnout) + "]```", true);
-			var sb = new StringBuilder().AppendLine("```md\nName                      Ranks    Total");
+				.AddField("Ability Scores", 
+						"```md\nSTR    [" + AbilityScores[0].Raw() + "]("+AbilityScores[0].Get().ToString("+#;-#;0") + ")"+
+						"\nDEX    [" + AbilityScores[1].Raw() + "]("+AbilityScores[1].Get().ToString("+#;-#;0") + ")"+
+						"\nAGI    [" + AbilityScores[2].Raw() + "]("+AbilityScores[2].Get().ToString("+#;-#;0") + ")"+
+						"\nCON    [" + AbilityScores[3].Raw() + "]("+AbilityScores[3].Get().ToString("+#;-#;0") + ")"+
+						"\nMEM    [" + AbilityScores[4].Raw() + "]("+AbilityScores[4].Get().ToString("+#;-#;0") + ")"+
+						"\nINT    [" + AbilityScores[5].Raw() + "]("+AbilityScores[5].Get().ToString("+#;-#;0") + ")"+
+						"\nCHA    [" + AbilityScores[6].Raw() + "]("+AbilityScores[6].Get().ToString("+#;-#;0") + ")```", true)
+				.AddField("Stats", 
+						"```css\nStamina [" + Stamina.Current + "/" + GetResourceMax(Stamina) + "]"+
+						"\nPain [" + Pain.Current + "/" + GetResourceMax(Pain) + "]"+
+						"\nFortitude   " + GetSkillBonus(Fortitude).ToString("+#;-#;0") + 
+						"\nUpgrade Pts " + UpgradePoints + 
+						"\nWillpower " + GetSkillBonus(WillPower).ToString("+#;-#;0") + 
+						"\nFocus [" + Focus.Current + "/" + GetResourceMax(Focus) + "]"+
+						"\nBurnout [" + Burnout.Current + "/" + GetResourceMax(Burnout) + "]```", true);
+
+			var sb = new StringBuilder();
+			sb.AppendLine("```md\nName                      Ranks    Total");
 			sb.AppendLine("========================================");
 			foreach (var x in GetSkills().OrderBy(x=>x.Name))
 			{
@@ -89,7 +138,7 @@ namespace DiscordTopRPG.Database
 				string total = string.Format("{0,9}", GetSkillBonus(x).ToString("+#;-#;0"));
 				sb.AppendLine(name + ranks + total);
 			}
-			page1.AddField("Skills", sb.ToString()+"```");
+			page1.AddField("Skills ("+GetRemainingRanks()+"/"+GetMaxRanks()+")", sb.ToString()+"```");
 			sb.Clear();
 
 			var page2 = new EmbedBuilder()
@@ -139,34 +188,31 @@ namespace DiscordTopRPG.Database
 
 			return new Embed[] { page1.Build(), page2.Build() };
 		}
-		public int GetSkillBonus(Skill skill)
+		
+		public double GetResourceMax(Resource resource)
 		{
-			int sc = AbilityScores[(int)skill.Score].Get();
-			if ((int)skill.Score == (int)AbilityScore.Agility)
-			{
-				int pen = Inventory.Worn.Select(x => x.Penalty).Sum();
-				return skill.Ranks + sc + pen;
-			}
-			return skill.Ranks + sc;
-		}
-		public int GetResourceMax(Resource resource)
-		{
-			int x = resource.Base + resource.Ranks;
+			double x = resource.Base + resource.Ranks;
 			x += (int)resource.Score > -1 ? AbilityScores[(int)resource.Score].Get() : 0;
 			return x;
 		}
 		public void FullResture()
 		{
-			Stamina.Current = GetResourceMax(Stamina);
-			Focus.Current = GetResourceMax(Focus);
+			Stamina.Current = Convert.ToInt32(GetResourceMax(Stamina));
+			Focus.Current = Convert.ToInt32(GetResourceMax(Focus));
 			Pain.Current = 0;
 			Burnout.Current = 0;
 		}
 	}
 	public class Stat
 	{
+		public int Base { get; set; } = 0;
 		public int Investment { get; set; } = 0;
-		public int Get() => Investment;
+		public double Get()
+		{
+			if (Investment < 0) return Math.Round((double)(Investment+Base) / 2);
+			else return Math.Floor((double)(Investment+Base )/ 2);
+		}
+		public int Raw() => Base + Investment;
 	}
 	public class Resource
 	{

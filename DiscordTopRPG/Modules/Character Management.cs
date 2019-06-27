@@ -125,5 +125,30 @@ namespace DiscordTopRPG.Modules
 			SaveCharacter(c);
 			await ReplyAsync(Context.User.Mention + ", Renamed "+old+" to "+New_Name);
 		}
+		[Command("AbilityScores"),Alias("GenerateAbilityScores","SelectStats")]
+		[RequireContext(ContextType.Guild)]
+		public async Task Scores()
+		{
+			var c = GetCharacter();
+			if (c == null)
+			{
+				await ReplyAsync(Context.User.Mention + ", You don't have an active character on this server.");
+				return;
+			}
+			var menu = new PointSpender("Setting " + c.Name + "'s Ability scores.\nThis will **overwrite** your character's base ability scores. It will not change any ability score increses you've bought with Upgrade Points.",new string[] {"Strength","Dextrity","Agility","Constitution","Memory","Intuition","Charisma"},1,10);
+			await CreateMenu(menu, true);
+			var result = await menu.GetValues();
+			if (result == null)
+			{
+				await ReplyAsync("Canceled Ability Score generation.");
+				return;
+			}
+			for(int i =0;i<result.Length;i++)
+			{
+				c.AbilityScores[i].Base = result[i];
+			}
+			SaveCharacter(c);
+			await ReplyAsync("Changed the base ability scores for " + c.Name + ".");
+		}
 	}
 }

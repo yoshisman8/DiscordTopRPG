@@ -15,7 +15,7 @@ namespace DiscordTopRPG.Database
 		/// The current Active weapon for the Attack command.
 		/// </summary>
 		public Weapon Weapon { get; set; } = null;
-
+		public int NaturalArmor { get; set; } = 0;
 		public List<Wearable> Wearables { get; set; } = new List<Wearable>();
 		public List<Consumable> Consumables { get; set; } = new List<Consumable>();
 		public List<Weapon> Weapons { get; set; } = new List<Weapon>();
@@ -70,6 +70,18 @@ namespace DiscordTopRPG.Database
 			if (Consumables[i].Quantity <= 0) return false;
 			Consumables[i].Quantity--;
 			return true;
+		}
+		public int GetBlockBonus()
+		{
+			int bonus = 0;
+			bonus += Worn.Select(x => x.Block).Sum();
+			return bonus;
+		}
+		public int GetAgiPenalty()
+		{
+			int bonus = 0;
+			bonus += Worn.Select(x => x.Penalty).Sum();
+			return bonus;
 		}
     }
 	public enum BodySlot { None=-1,Head,Body,Gloves,Boots,Accessory}
