@@ -81,7 +81,7 @@ namespace DiscordTopRPG.Modules
 				await ReplyAsync("Skills cannot have more ranks than your character has levels.");
 				return;
 			}
-			else if (c.GetRemainingRanks()-1 > 0)
+			else if (c.GetRemainingRanks()-ranks < 0)
 			{
 				await ReplyAsync("You don't have any more skill ranks. Consider using Upgrade Points to get the Skill Bonus upgrade");
 				return;
