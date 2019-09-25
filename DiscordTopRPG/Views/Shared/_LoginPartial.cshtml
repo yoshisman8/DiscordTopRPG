@@ -1,0 +1,27 @@
+@using Microsoft.AspNetCore.Identity
+@inject SignInManager<IdentityUser> SignInManager
+@inject UserManager<IdentityUser> UserManager
+@{ 
+    var discordprovider = SignInManager.GetExternalAuthenticationSchemesAsync().GetAwaiter().GetResult().FirstOrDefault();
+}
+<ul class="navbar-nav">
+@if (SignInManager.IsSignedIn(User))
+{
+    <li class="nav-item">
+        <a  class="nav-link" asp-area="Identity" asp-page="/Account/Manage/Index" title="Manage">Hello @User.Identity.Name!</a>
+    </li>
+    <li class="nav-item">
+        <form  class="form-inline" asp-action="Logout" asp-controller="Identity" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
+            <button  type="submit" class="nav-link btn btn-link">Logout</button>
+        </form>
+    </li>
+}
+else
+{
+    <li>
+        <form method="post" asp-action="Login" asp-controller="Identity" asp-route-returnUrl="@Url.Action("Index","Home", new { area = "" })">
+            <button class="btn btn-primary" name="provider" value="@discordprovider.Name" type="submit" title="Log in using Discord">Log In</button>
+        </form>
+    </li>
+}
+</ul>
