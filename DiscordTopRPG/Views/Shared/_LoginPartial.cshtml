@@ -1,26 +1,43 @@
 @using Microsoft.AspNetCore.Identity
-@inject SignInManager<IdentityUser> SignInManager
-@inject UserManager<IdentityUser> UserManager
+@using Discord.WebSocket
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
+@inject DiscordSocketClient Client
 @{ 
     var discordprovider = SignInManager.GetExternalAuthenticationSchemesAsync().GetAwaiter().GetResult().FirstOrDefault();
+    string avatar = "";
+    if (SignInManager.IsSignedIn(User))
+    {
+        var user = Client.GetUser((await UserManager.GetUserAsync(User)).DiscordId);
+
+        if (user != null)
+        {
+            avatar = user.GetAvatarUrl();
+        }
+    }
 }
 <ul class="navbar-nav">
 @if (SignInManager.IsSignedIn(User))
 {
-    <li class="nav-item">
-        <a  class="nav-link" asp-area="Identity" asp-page="/Account/Manage/Index" title="Manage">Hello @User.Identity.Name!</a>
+    <li>
+        <a asp-action="Index" asp-controller="Sheet"><img height="40" width="40" class="nav-item border-dark img-thumbnail rounded-circle" src="@avatar" /></a>
     </li>
+
     <li class="nav-item">
+        <a asp-action="Index" asp-controller="Sheet" class="nav-link">Hello @User.Identity.Name!</a>
+    </li>
+
+    <li>
         <form  class="form-inline" asp-action="Logout" asp-controller="Identity" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
-            <button  type="submit" class="nav-link btn btn-link">Logout</button>
+            <button  type="submit" class="nav-item btn btn-burple">Logout</button>
         </form>
     </li>
 }
 else
 {
     <li>
-        <form method="post" asp-action="Login" asp-controller="Identity" asp-route-returnUrl="@Url.Action("Index","Home", new { area = "" })">
-            <button class="btn btn-primary" name="provider" value="@discordprovider.Name" type="submit" title="Log in using Discord">Log In</button>
+        <form method="get" asp-action="Login" asp-controller="Identity" asp-route-returnUrl="@Url.Action("Index","Home", new { area = "" })">
+            <button class="btn btn-burple" name="provider" value="@discordprovider.Name" type="submit" title="Log in using Discord">Log In</button>
         </form>
     </li>
 }

@@ -19,6 +19,7 @@ using Discord.Commands;
 using Discord.WebSocket;
 using ERA20.Services;
 using DiscordTopRPG.Services;
+using DiscordTopRPG.Models;
 
 namespace DiscordTopRPG
 {
@@ -55,7 +56,7 @@ namespace DiscordTopRPG
                 x.Scope.Add("identify");
             });
 
-            services.AddDefaultIdentity<IdentityUser>(options =>
+            services.AddIdentity<ApplicationUser, IdentityRole>(options =>
             {
                 options.User.RequireUniqueEmail = false;
                 options.Password.RequireDigit = false;
@@ -64,8 +65,15 @@ namespace DiscordTopRPG
                 options.Password.RequireNonAlphanumeric = false;
                 options.Password.RequireLowercase = false;
                 options.Password.RequireUppercase = false;
+                options.Lockout.AllowedForNewUsers = false;
             }).AddEntityFrameworkStores<ApplicationDbContext>();
 
+            services.ConfigureApplicationCookie(x =>
+            {
+                x.SlidingExpiration = true;
+                x.LoginPath = "/Identity/Login";
+                x.LogoutPath = "/Home/Index";
+            });
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
 
             // Discord bot singletons

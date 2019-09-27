@@ -7,13 +7,12 @@ using Microsoft.EntityFrameworkCore;
 
 namespace DiscordTopRPG.Data
 {
-    public class ApplicationDbContext : IdentityDbContext
+    public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
         {
         }
-
-        public DbSet<Actor> Characters { get; set; }
+        public DbSet<ApplicationUser> Users { get; set; }
     }
 }

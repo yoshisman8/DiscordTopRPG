@@ -13,8 +13,8 @@ namespace DiscordTopRPG.Models
         public int Id { get; set; }
         public string Name { get; set; }
         public string Description { get; set; }
-        public Effects Effect { get; set; }
-        public int Value { get; set; }
-        public int EffectSpecific { get; set; }
+        // public Effects Effect { get; set; }
+        // public int Value { get; set; }
+        // public int EffectSpecific { get; set; }
     }
 }
