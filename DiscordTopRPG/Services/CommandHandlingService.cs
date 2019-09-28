@@ -1,91 +1,54 @@
-using System;
+﻿using System;
 using System.Reflection;
 using System.Threading.Tasks;
-using System.IO;
-using System.Text.RegularExpressions;
-using Microsoft.Extensions.Configuration;
 using Discord;
+using System.IO;
 using Discord.Commands;
 using Discord.WebSocket;
-using Discord.Addons.Interactive;
-using Discord.Addons.CommandCache;
-using LiteDB;
-using System.Collections.Generic;
+using Microsoft.Extensions.Configuration;
 using System.Linq;
-using DiscordTopRPG.Database;
 
-namespace DiscordTopRPG.Services
+namespace ERA20.Services
 {
     public class CommandHandlingService
     {
         private readonly DiscordSocketClient _discord;
         private readonly CommandService _commands;
+        private IConfiguration _config;
         private IServiceProvider _provider;
-        private LiteDatabase _database;
-        private readonly IConfiguration _config;
-        private CommandCacheService _cache;
 
-		public Dictionary<ulong,ulong> CommandCache { get; set; }
-        public CommandHandlingService(IConfiguration config, IServiceProvider provider, DiscordSocketClient discord, CommandService commands, CommandCacheService cache,LiteDatabase database)
+        public CommandHandlingService(IServiceProvider provider, DiscordSocketClient discord, IConfiguration config, CommandService commands)
         {
             _discord = discord;
             _commands = commands;
             _provider = provider;
             _config = config;
-            _database = database;
-            _cache = cache;
 
-			CommandCache = new Dictionary<ulong, ulong>();
-            
             _discord.MessageReceived += MessageReceived;
-            _discord.MessageUpdated += OnMessageUpdated;
-            _discord.JoinedGuild += OnJoinedGuild;
-			_discord.Ready += OnClientReady;
-        }
-
-		private async Task OnClientReady()
-		{
-			await InitializeGuildsDB();
-		}
-
-		public async Task OnJoinedGuild(SocketGuild arg)
-        {
-            var col = _database.GetCollection<Server>("Servers");
-			if (col.Exists(x => x.Id == arg.Id)) return;
-            col.Insert(new Server() {Id=arg.Id});
+            _discord.MessageUpdated += OnMessageUpdate;
         }
 
 
-        private Task InitializeGuildsDB()
+        private async Task OnMessageUpdate(Cacheable<IMessage, ulong> original, SocketMessage edit, ISocketMessageChannel channel)
         {
-            var col = _database.GetCollection<Server>("Servers");
-            var joined = _discord.Guilds;
-            foreach (var x in joined)
+            if (edit == null) return;
+            var msg = await original.DownloadAsync() as SocketUserMessage;
+            var msg2 = edit as SocketUserMessage;
+            int argPos = 0;
+
+            if (msg2.HasStringPrefix(_config["prefix"], ref argPos))
             {
-                if (!col.Exists(y =>y.Id == x.Id))
-                {
-                    col.Insert(new Server()
-                    {
-                        Id = x.Id
-                    });
-                }
+                var messages = await channel.GetMessagesAsync(msg, Direction.After, 2, CacheMode.AllowDownload).FlattenAsync();
+                var lastreply = messages.Where(x => x.Author.Id == _discord.CurrentUser.Id).FirstOrDefault();
+                await lastreply.DeleteAsync();
+                await MessageReceived(edit);
             }
-			return Task.CompletedTask;
-        }
-		public async Task OnMessageUpdated(Cacheable<IMessage, ulong> _OldMsg, SocketMessage NewMsg, ISocketMessageChannel Channel)
-        {
-            var OldMsg = await _OldMsg.DownloadAsync();
-            if (OldMsg== null||NewMsg==null) return;
-            if (OldMsg.Source != MessageSource.User||NewMsg.Source != MessageSource.User) return;
-			await MessageReceived(NewMsg);	
         }
 
         public async Task InitializeAsync(IServiceProvider provider)
         {
             _provider = provider;
-			_commands.AddTypeReader<Character[]>(new CharacterTypeReader());
-			_commands.AddTypeReader<Skill[]>(new SkillTypereader());
-			await _commands.AddModulesAsync(Assembly.GetEntryAssembly(),_provider);
+            await _commands.AddModulesAsync(Assembly.GetEntryAssembly(),provider);
             // Add additional initialization code here...
         }
 
@@ -93,34 +56,63 @@ namespace DiscordTopRPG.Services
         {
             // Ignore system messages and messages from bots
             if (!(rawMessage is SocketUserMessage message)) return;
-            if (message.Source != MessageSource.User) return;
-
-            var context = new SocketCommandContext(_discord, message);
-            var Guild = _database.GetCollection<Server>("Servers").FindOne(x=>x.Id==context.Guild.Id);
-
+            if (message.Author == _discord.CurrentUser) return;
+            var msg = rawMessage as SocketUserMessage;
             int argPos = 0;
-            if (Guild!= null && !message.HasStringPrefix(Guild.Prefix, ref argPos) && !message.HasMentionPrefix(_discord.CurrentUser, ref argPos)) return;
+            var context = new SocketCommandContext(_discord, message);
 
-            if(DateTime.Now.Month == 4 && DateTime.Now.Day == 1)
+            var cmds = "";
+            if (msg.Content != "")
             {
-                var chance = new Random().Next(0,100);
-                if(chance <= 25)
+                cmds = msg.Content.Substring(1).Split(' ').FirstOrDefault();
+            }
+
+            if (msg.HasStringPrefix(_config["prefix"], ref argPos) || msg.HasMentionPrefix(_discord.CurrentUser, ref argPos))
+            {
+                var result = await _commands.ExecuteAsync(context, argPos, _provider);     // Execute the command
+
+                if (!result.IsSuccess && ((result.Error != CommandError.UnknownCommand) && (result.Error != CommandError.BadArgCount)))
+                {     // If command error, reply with the error and send error to Crash log.
+                    await msg.AddReactionAsync(new Discord.Emoji("💥"));
+                    var cnnl = context.Guild.GetTextChannel(495267183518285835);
+                    await cnnl.SendMessageAsync("[" + DateTime.Now.ToShortDateString() + "] " + DateTime.Now.ToShortTimeString() + " " + result.Error.Value.ToString());
+                }
+                if (!result.IsSuccess && result.Error == CommandError.UnknownCommand)
+                {     // If not a command, reply with the Emote.
+                    await msg.AddReactionAsync(new Discord.Emoji("❓"));
+                }
+                if (!result.IsSuccess && result.Error == CommandError.BadArgCount)
                 {
-                    await context.Channel.SendMessageAsync("OOPSIE WOOPSIE!! Uwu We made a fucky wucky!! A wittle fucko boingo! The code monkeys at our headquarters are working VEWY HAWD to fix this!");
-                    return;
+                    // if incorrect arguments, DM command help.
+                    var DMs = await context.User.GetOrCreateDMChannelAsync();
+                    string command = msg.Content.Split(' ')[0].Substring(1);
+                    var res = _commands.Search(context, command);
+                    if (!res.IsSuccess)
+                    {
+                        await DMs.SendMessageAsync($"Sorry, I couldn't find a command like **{command}**.");
+                        return;
+                    }
+                    string prefix = _config["prefix"];
+                    var builder = new EmbedBuilder()
+                    {
+                        Color = new Color(114, 137, 218),
+                        Description = $"Here is how you use **{command}**:"
+                    };
+                    foreach (var match in res.Commands)
+                    {
+                        var cmd = match.Command;
+                        builder.AddField(x =>
+                        {
+                            x.Name = string.Join(", ", cmd.Aliases);
+                            x.Value = $"Parameters: {string.Join(", ", cmd.Parameters.Select(p => p.Name))}\n" +
+                                    $"Summary: {cmd.Summary}";
+                            x.IsInline = false;
+                        });
+                    }
+                    await DMs.SendMessageAsync("", false, builder.Build());
                 }
             }
-            var result = await _commands.ExecuteAsync(context, argPos, _provider);
-            
-            if (result.Error.HasValue && (result.Error.Value != CommandError.UnknownCommand))
-            {
-                Console.WriteLine(result.Error+"\n"+result.ErrorReason); 
-            }
-            if (result.Error.HasValue && result.Error.Value == CommandError.ObjectNotFound)
-            {
-                var msg = await context.Channel.SendMessageAsync("Sorry. "+result.ErrorReason);
-                _cache.Add(context.Message.Id,msg.Id);
-            }
         }
+
     }
 }
