@@ -12,6 +12,7 @@ namespace DiscordTopRPG.Models
     {
         [Key]
         public int Id { get; set; }
+        
         public string Name { get; set; }
         public string Bio { get; set; }
 
@@ -26,6 +27,6 @@ namespace DiscordTopRPG.Models
         public int Charisma { get; set; }
 
         public List<Skill> Skill {get;set;}
-        public Dictionary<Item,int> Inventory { get; set; }
+        public List<PlayerItem> Inventory { get; set; }
     }
 }

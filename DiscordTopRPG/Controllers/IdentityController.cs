@@ -20,16 +20,16 @@ namespace DiscordTopRPG.Controllers
             UserManager = _UserManager;
         }
         [AllowAnonymous]
-        public async Task<ActionResult> Login(string provider, string returnUrl)
+        public ActionResult Login(string provider, string returnUrl)
         {
             string redirecturl = Url.Action("ExternalLoginCallback", "Identity", new { returnUrl = returnUrl });
             var properties = signInManager.ConfigureExternalAuthenticationProperties(provider, redirecturl);
             return Challenge(properties,provider);
         }
-        [HttpGet]
-        public async Task<ActionResult> LoginRedirect(string returnUrl)
+        [HttpGet("/LoginRedirect")]
+        public ActionResult LoginRedirect(string returnUrl)
         {
-            return await Login("discord", returnUrl);
+            return Login("discord", returnUrl);
         }
         [HttpPost]
         [Authorize]

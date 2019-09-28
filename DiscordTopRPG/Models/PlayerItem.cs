@@ -7,14 +7,12 @@ using System.Threading.Tasks;
 
 namespace DiscordTopRPG.Models
 {
-    public class SkillAction
+    public class PlayerItem
     {
         [Key]
         public int Id { get; set; }
-        public ApplicationUser Creator { get; set; }
-        public string Name { get; set; }
-        public string Description { get; set; }
-        public ActionEconomy ActionEconomy { get; set; }
-        public string Tags { get; set; }
+        public Item Item { get; set; }
+        public ApplicationUser User { get; set; }
+        public int Quantity { get; set; }
     }
 }

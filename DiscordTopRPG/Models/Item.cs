@@ -12,10 +12,11 @@ namespace DiscordTopRPG.Models
     {
         [Key]
         public int Id { get; set; }
-        [ForeignKey("AspNetUser")]
         public ApplicationUser Creator { get; set; }
         public string Name { get; set; }
         public string Description { get; set; }
-        public string[] Tags { get; set; }
+        public string Tags { get; set; }
     }
+
+    
 }

@@ -47,7 +47,6 @@ namespace DiscordTopRPG
                 options.UseSqlServer(
                     Configuration.GetConnectionString("DefaultConnection")));
 
-
             services.AddAuthentication().AddDiscord(x =>
             {
                 x.AppId = Configuration["AppId"];
@@ -71,7 +70,7 @@ namespace DiscordTopRPG
             services.ConfigureApplicationCookie(x =>
             {
                 x.SlidingExpiration = true;
-                x.LoginPath = "/Identity/Login";
+                x.LoginPath = "/LoginRedirect";
                 x.LogoutPath = "/Home/Index";
             });
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
