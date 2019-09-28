@@ -1,74 +1,47 @@
-﻿using LiteDB;
-using System;
-using Discord;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
+using Discord;
+using Discord.Addons.Interactive;
 using Discord.Commands;
 using Discord.WebSocket;
 using DiscordTopRPG.Services;
-using System.Threading.Tasks;
+using ERA20.Services;
+using Microsoft.AspNetCore;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Discord.Addons.Interactive;
-using Discord.Addon.InteractiveMenus;
-using Discord.Addons.CommandCache;
+using Microsoft.Extensions.Logging;
 
 namespace DiscordTopRPG
 {
-	class Program
-	{
-		static void Main(string[] args)
-			=> new Program().MainAsync().GetAwaiter().GetResult();
+    public class Program
+    {
 
-		private DiscordSocketClient _client;
-		private IConfiguration _config;
+        public static async Task Main(string[] args)
+        {
+            var host = CreateWebHostBuilder(args).Build();
 
-		public async Task MainAsync()
-		{
-			Directory.CreateDirectory(Path.Combine(Directory.GetCurrentDirectory(), "Data"));
-			_client = new DiscordSocketClient();
-			_config = BuildConfig();
+            var client = host.Services.GetRequiredService<DiscordSocketClient>();
+            var config = host.Services.GetService<IConfiguration>();
 
-			var services = ConfigureServices();
-			services.GetRequiredService<LogService>();
-			await services.GetRequiredService<CommandHandlingService>().InitializeAsync(services);
+            var services = host.Services;
+            services.GetRequiredService<LogService>();
+            await services.GetRequiredService<CommandHandlingService>().InitializeAsync(services);
 
-			await _client.LoginAsync(TokenType.Bot, _config["token"]);
-			await _client.StartAsync();
+            await client.LoginAsync(TokenType.Bot, config["Tokens:Discord"]);
+            await client.StartAsync();
 
-			await Task.Delay(-1);
-		}
+            await host.RunAsync();
+        }
 
-		private IServiceProvider ConfigureServices()
-		{
-			return new ServiceCollection()
-				// Base
-				.AddSingleton(_client)
-				.AddSingleton(new CommandService(new CommandServiceConfig()
-				{
-					DefaultRunMode = RunMode.Async,
-					CaseSensitiveCommands = false
-				})
-				)
-				.AddSingleton<CommandHandlingService>()
-				// Logging
-				.AddLogging()
-				.AddSingleton<LogService>()
-				// Extra
-				.AddSingleton(_config)
-				.AddSingleton(new LiteDatabase(Path.Combine(Directory.GetCurrentDirectory(), "Data", "Database.db")))
-				.AddSingleton(new CommandCacheService(_client))
-				.AddSingleton(new InteractiveService(_client))
-				.AddSingleton(new MenuService(_client))
-				// Add additional services here...
-				.BuildServiceProvider();
-		}
-
-		private IConfiguration BuildConfig()
-		{
-			return new ConfigurationBuilder()
-				.SetBasePath(Directory.GetCurrentDirectory())
-				.AddJsonFile(Path.Combine(Directory.GetCurrentDirectory(), "Data", "config.json"))
-				.Build();
-		}
-	}
+        public static IWebHostBuilder CreateWebHostBuilder(string[] args)
+        {
+            return WebHost.CreateDefaultBuilder(args)
+                .UseStartup<Startup>();
+        }
+            
+    }
 }
