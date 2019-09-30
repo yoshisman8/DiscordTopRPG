@@ -11,8 +11,9 @@ namespace DiscordTopRPG.Models
     {
         [Key]
         public int Id { get; set; }
+        [ForeignKey("Character")]
+        public Character CharacterId { get; set; }
         public Item Item { get; set; }
-        public ApplicationUser User { get; set; }
         public int Quantity { get; set; }
     }
 }

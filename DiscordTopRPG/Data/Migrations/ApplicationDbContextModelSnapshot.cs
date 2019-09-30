@@ -133,21 +133,17 @@ namespace DiscordTopRPG.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
-                    b.Property<int?>("CharacterId");
+                    b.Property<int?>("Character");
 
                     b.Property<int?>("ItemId");
 
                     b.Property<int>("Quantity");
 
-                    b.Property<string>("UserId");
-
                     b.HasKey("Id");
 
-                    b.HasIndex("CharacterId");
+                    b.HasIndex("Character");
 
                     b.HasIndex("ItemId");
-
-                    b.HasIndex("UserId");
 
                     b.ToTable("PlayerItem");
                 });
@@ -330,17 +326,13 @@ namespace DiscordTopRPG.Data.Migrations
 
             modelBuilder.Entity("DiscordTopRPG.Models.PlayerItem", b =>
                 {
-                    b.HasOne("DiscordTopRPG.Models.Character")
+                    b.HasOne("DiscordTopRPG.Models.Character", "CharacterId")
                         .WithMany("Inventory")
-                        .HasForeignKey("CharacterId");
+                        .HasForeignKey("Character");
 
                     b.HasOne("DiscordTopRPG.Models.Item", "Item")
                         .WithMany()
                         .HasForeignKey("ItemId");
-
-                    b.HasOne("DiscordTopRPG.Models.ApplicationUser", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId");
                 });
 
             modelBuilder.Entity("DiscordTopRPG.Models.Skill", b =>
