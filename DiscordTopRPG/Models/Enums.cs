@@ -6,5 +6,5 @@ using System.Threading.Tasks;
 namespace DiscordTopRPG.Models
 {
     public enum Conditions { Frozen, Paralyzed, Burned, Poisoned, Recovering, Asleep, KockedOut }
-    public enum ActionEconomy { Simple, Complex, Reaction, Free }
+    public enum ActionEconomy { Simple, Complex, Reaction, Free, Passive }
 }
