@@ -22,10 +22,26 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Remove="ClientApp\public\bootstrap.css" />
+    <None Remove="ClientApp\public\bootstrap.css.map" />
+    <None Remove="ClientApp\public\bootstrap.min.css" />
+    <None Remove="ClientApp\public\bootstrap.min.css.map" />
     <None Remove="ClientApp\public\Logo.png" />
   </ItemGroup>
 
   <ItemGroup>
+    <Content Include="ClientApp\public\bootstrap.css">
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+    <Content Include="ClientApp\public\bootstrap.css.map">
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+    <Content Include="ClientApp\public\bootstrap.min.css">
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+    <Content Include="ClientApp\public\bootstrap.min.css.map">
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
     <Content Include="ClientApp\public\Logo.png">
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
     </Content>
