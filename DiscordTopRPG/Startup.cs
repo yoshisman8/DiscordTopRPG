@@ -1,17 +1,23 @@
-using Discord.Addons.Interactive;
-using Discord.Commands;
-using Discord.WebSocket;
-using DiscordTopRPG.Services;
-using LiteDB;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.SpaServices.ReactDevelopmentServer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using System;
-using System.IO;
+using Microsoft.Extensions.Hosting;
+using DiscordTopRPG.Data;
+using Discord.WebSocket;
+using Discord.Commands;
+using DiscordTopRPG.Services;
+using Discord.Addons.Interactive;
 
 namespace DiscordTopRPG
 {
@@ -25,18 +31,38 @@ namespace DiscordTopRPG
 		public IConfiguration Configuration { get; }
 		public DiscordSocketClient _client { get; } = new DiscordSocketClient();
 
-
 		// This method gets called by the runtime. Use this method to add services to the container.
+		// For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
 		public void ConfigureServices(IServiceCollection services)
 		{
-			services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
+			services.AddDbContext<ApplicationDbContext>(options =>
+				options.UseSqlServer(
+					Configuration.GetConnectionString("DefaultConnection")));
 
-			// In production, the React files will be served from this directory
-			services.AddSpaStaticFiles(configuration =>
+			services.AddAuthentication().AddDiscord(x =>
 			{
-				configuration.RootPath = "ClientApp/build";
+				x.AppId = Configuration["AppId"];
+				x.AppSecret = Configuration["AppSecret"];
+				x.Scope.Add("guilds");
+				x.Scope.Add("identify");
 			});
-			// Discord Services
+
+			services.AddIdentity<ApplicationUser, IdentityRole>(options =>
+			{
+				options.User.RequireUniqueEmail = false;
+				options.Password.RequireDigit = false;
+				options.Password.RequiredLength = 4;
+				options.Password.RequiredUniqueChars = 0;
+				options.Password.RequireNonAlphanumeric = false;
+				options.Password.RequireLowercase = false;
+				options.Password.RequireUppercase = false;
+				options.Lockout.AllowedForNewUsers = false;
+			}).AddEntityFrameworkStores<ApplicationDbContext>();
+
+			services.AddRazorPages();
+			services.AddServerSideBlazor();
+
+			// Discord bot singletons
 			services.AddSingleton(_client);
 			services.AddSingleton<CommandService>();
 			services.AddSingleton<CommandHandlingService>();
@@ -46,15 +72,15 @@ namespace DiscordTopRPG
 			services.AddSingleton<LogService>();
 			// Extra
 			services.AddSingleton<Random>();
-			services.AddSingleton(new LiteDatabase(Path.Combine(Directory.GetCurrentDirectory(), "Data", "Database.db")));
 		}
 
 		// This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-		public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+		public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
 		{
 			if (env.IsDevelopment())
 			{
 				app.UseDeveloperExceptionPage();
+				app.UseDatabaseErrorPage();
 			}
 			else
 			{
@@ -65,23 +91,17 @@ namespace DiscordTopRPG
 
 			app.UseHttpsRedirection();
 			app.UseStaticFiles();
-			app.UseSpaStaticFiles();
 
-			app.UseMvc(routes =>
+			app.UseRouting();
+
+			app.UseAuthentication();
+			app.UseAuthorization();
+
+			app.UseEndpoints(endpoints =>
 			{
-				routes.MapRoute(
-					name: "default",
-					template: "{controller}/{action=Index}/{id?}");
-			});
-
-			app.UseSpa(spa =>
-			{
-				spa.Options.SourcePath = "ClientApp";
-
-				if (env.IsDevelopment())
-				{
-					spa.UseReactDevelopmentServer(npmScript: "start");
-				}
+				endpoints.MapControllers();
+				endpoints.MapBlazorHub();
+				endpoints.MapFallbackToPage("/_Host");
 			});
 		}
 	}

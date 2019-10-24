@@ -10,6 +10,7 @@ using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
 namespace DiscordTopRPG
@@ -18,7 +19,7 @@ namespace DiscordTopRPG
 	{
 		public static async Task Main(string[] args)
 		{
-			var host = CreateWebHostBuilder(args).Build();
+			var host = CreateHostBuilder(args).Build();
 
 			var client = host.Services.GetRequiredService<DiscordSocketClient>();
 			var config = host.Services.GetService<IConfiguration>();
@@ -33,8 +34,11 @@ namespace DiscordTopRPG
 			await host.RunAsync();
 		}
 
-		public static IWebHostBuilder CreateWebHostBuilder(string[] args) =>
-			WebHost.CreateDefaultBuilder(args)
-				.UseStartup<Startup>();
+		public static IHostBuilder CreateHostBuilder(string[] args) =>
+			Host.CreateDefaultBuilder(args)
+				.ConfigureWebHostDefaults(webBuilder =>
+				{
+					webBuilder.UseStartup<Startup>();
+				});
 	}
 }
