@@ -6,27 +6,11 @@
 @inject DiscordSocketClient Client
 @inject AuthenticationStateProvider AuthenticationStateProvider
 
-@{
-	var discordprovider = SignInManager.GetExternalAuthenticationSchemesAsync().GetAwaiter().GetResult().FirstOrDefault();
-	string avatar = "";
-	var User = AuthenticationStateProvider.GetAuthenticationStateAsync().GetAwaiter().GetResult().User;
-	if (SignInManager.IsSignedIn(User))
-	{
-		var user = Client.GetUser(UserManager.GetUserAsync(User).GetAwaiter().GetResult().DiscordId);
-
-		if (user != null)
-		{
-			avatar = user.GetAvatarUrl();
-		}
-	}
-
-}
-
 <AuthorizeView>
 	<Authorized>
 		<ul class="navbar-nav">
 			<li>
-				<a asp-action="Index" asp-controller="Sheet"><img height="40" width="40" class="nav-item border-dark img-thumbnail rounded-circle" src="@avatar" /></a>
+				<a href="myhome"><img height="40" width="40" class="nav-item border-dark img-thumbnail rounded-circle" src="@avatar" /></a>
 			</li>
 
 			<li class="nav-item">
@@ -55,6 +39,32 @@
 @code{
 
 	[CascadingParameter] Task<AuthenticationState> AuthenticationStateTask { get; set; }
-	
-	public 
+	public string avatar { get; set; }
+	public bool Loggedin { get; set; } = false;
+	public Microsoft.AspNetCore.Authentication.AuthenticationScheme discordprovider { get; set; }
+	public System.Security.Claims.ClaimsPrincipal User { get; set; }
+
+	protected override async void OnInitialized()
+	{
+		discordprovider = (await SignInManager.GetExternalAuthenticationSchemesAsync()).FirstOrDefault();
+		var User = (await AuthenticationStateTask).User;
+		if (SignInManager.IsSignedIn(User))
+		{
+			var user = Client.GetUser(UserManager.GetUserAsync(User).GetAwaiter().GetResult().DiscordId);
+
+			if (user != null)
+			{
+				avatar = user.GetAvatarUrl();
+			}
+		}
+	}
+
+	public async Task Login()
+	{
+
+	}
+	public async Task Logout()
+	{
+
+	}
 }
