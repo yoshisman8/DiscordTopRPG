@@ -15,5 +15,7 @@ namespace DiscordTopRPG.Data
 			this.DiscordId = DiscordId;
 		}
 		public ulong DiscordId { get; set; }
+		public string AvatarUrl { get; set; }
+		public bool IsAuthenticated { get; set; }
 	}
 }

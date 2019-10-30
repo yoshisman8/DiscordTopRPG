@@ -1,10 +1,8 @@
-﻿@using Microsoft.AspNetCore.Identity
-@using Discord.WebSocket
-@using DiscordTopRPG.Data
+﻿@inject AuthenticationStateProvider AuthenticationStateProvider
 @inject SignInManager<ApplicationUser> SignInManager
 @inject UserManager<ApplicationUser> UserManager
 @inject DiscordSocketClient Client
-@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager NavigationManager
 
 <AuthorizeView>
 	<Authorized>
@@ -18,7 +16,7 @@
 			</li>
 
 			<li>
-				<form class="form-inline" asp-action="Logout" asp-controller="Identity">
+				<form class="form-inline" action="logout">
 					<button type="submit" class="nav-item btn btn-burple">Logout</button>
 				</form>
 			</li>
@@ -28,9 +26,7 @@
 	<NotAuthorized>
 		<ul class="navbar-nav">
 			<li>
-				<form method="post" action="api/login">
-					<button class="btn btn-burple" name="provider" value="@discordprovider.Name" type="submit" title="Log in using Discord">Log In</button>
-				</form>
+				<a class="nav-item btn btn-burple" href="login?redirectUrl=@NavigationManager.ToBaseRelativePath(NavigationManager.BaseUri)">Log-in</a>
 			</li>
 		</ul>
 	</NotAuthorized>
@@ -39,10 +35,10 @@
 @code{
 
 	[CascadingParameter] Task<AuthenticationState> AuthenticationStateTask { get; set; }
-	public string avatar { get; set; }
-	public bool Loggedin { get; set; } = false;
-	public Microsoft.AspNetCore.Authentication.AuthenticationScheme discordprovider { get; set; }
-	public System.Security.Claims.ClaimsPrincipal User { get; set; }
+	private string avatar { get; set; }
+	private bool Loggedin { get; set; } = false;
+	private Microsoft.AspNetCore.Authentication.AuthenticationScheme discordprovider { get; set; }
+	private System.Security.Claims.ClaimsPrincipal User { get; set; }
 
 	protected override async void OnInitialized()
 	{
@@ -57,14 +53,5 @@
 				avatar = user.GetAvatarUrl();
 			}
 		}
-	}
-
-	public async Task Login()
-	{
-
-	}
-	public async Task Logout()
-	{
-
 	}
 }
