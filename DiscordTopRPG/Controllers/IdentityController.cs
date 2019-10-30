@@ -57,44 +57,43 @@ namespace DiscordTopRPG.Controllers
 		//{
 		//	return Login("discord", returnUrl);
 		//}
-		[HttpPost("logout")]
+		[HttpPost("logout"), HttpGet("logout")]
 		[Authorize]
-		public async Task<IActionResult> Logout()
+		public async Task Logout()
 		{
-			await signInManager.SignOutAsync();
-			return Redirect("~/");
+			await HttpContext.SignOutAsync(new AuthenticationProperties { RedirectUri = "/" });
 		}
 
-		[HttpGet("signin-discord")]
-		public async Task ExternalLoginCallback(string returnUrl)
-		{
-			returnUrl = returnUrl ?? Url.Content("~/");
-			var info = await signInManager.GetExternalLoginInfoAsync();
-			if (info == null)
-			{
-				HttpContext.Response.Redirect(returnUrl);
-			}
-			var result = await signInManager.ExternalLoginSignInAsync(info.LoginProvider, info.ProviderKey, true);
-			if (result.Succeeded)
-			{
-				HttpContext.Response.Redirect(returnUrl);
-			}
-			else
-			{
-				var username = info.Principal.FindFirstValue(ClaimTypes.Name);
-				if (username != null)
-				{
-					var user = await UserManager.FindByNameAsync(info.Principal.Identity.Name);
-					if (user == null)
-					{
-						user = new ApplicationUser(info.Principal.FindFirstValue(ClaimTypes.Name), Convert.ToUInt64(info.ProviderKey));
-						await UserManager.CreateAsync(user);
-					}
-					await UserManager.AddLoginAsync(user, info);
-					await signInManager.SignInAsync(user, true);
-				}
-				HttpContext.Response.Redirect(returnUrl);
-			}
-		}
+		//[HttpGet("signin-discord")]
+		//public async Task ExternalLoginCallback(string returnUrl)
+		//{
+		//	returnUrl = returnUrl ?? Url.Content("~/");
+		//	var info = await signInManager.GetExternalLoginInfoAsync();
+		//	if (info == null)
+		//	{
+		//		HttpContext.Response.Redirect(returnUrl);
+		//	}
+		//	var result = await signInManager.ExternalLoginSignInAsync(info.LoginProvider, info.ProviderKey, true);
+		//	if (result.Succeeded)
+		//	{
+		//		HttpContext.Response.Redirect(returnUrl);
+		//	}
+		//	else
+		//	{
+		//		var username = info.Principal.FindFirstValue(ClaimTypes.Name);
+		//		if (username != null)
+		//		{
+		//			var user = await UserManager.FindByNameAsync(info.Principal.Identity.Name);
+		//			if (user == null)
+		//			{
+		//				user = new ApplicationUser(info.Principal.FindFirstValue(ClaimTypes.Name), Convert.ToUInt64(info.ProviderKey));
+		//				await UserManager.CreateAsync(user);
+		//			}
+		//			await UserManager.AddLoginAsync(user, info);
+		//			await signInManager.SignInAsync(user, true);
+		//		}
+		//		HttpContext.Response.Redirect(returnUrl);
+		//	}
+		//}
 	}
 }
