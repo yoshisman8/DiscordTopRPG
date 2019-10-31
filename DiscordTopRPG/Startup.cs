@@ -20,6 +20,8 @@ using DiscordTopRPG.Services;
 using Discord.Addons.Interactive;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using System.Net.Http;
+using Microsoft.AspNetCore.Http;
 
 namespace DiscordTopRPG
 {
@@ -41,16 +43,23 @@ namespace DiscordTopRPG
 				options.UseSqlServer(
 					Configuration.GetConnectionString("DefaultConnection")));
 
+			services.AddAuthorizationCore();
 			services.AddAuthentication(options =>
 			{
 				options.DefaultAuthenticateScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-			}).AddDiscord(x =>
+				options.DefaultSignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+			})
+
+			.AddDiscord(x =>
 			{
 				x.ClientId = Configuration["AppId"];
 				x.ClientSecret = Configuration["AppSecret"];
 				x.Scope.Add("guilds");
 				x.Scope.Add("identify");
-			}).AddCookie(options=> 
+				x.Validate();
+			})
+			
+			.AddCookie(options=> 
 			{
 				options.AccessDeniedPath = "/login";
 				options.LoginPath = "/login";
@@ -69,14 +78,17 @@ namespace DiscordTopRPG
 				options.Lockout.AllowedForNewUsers = false;
 			}).AddEntityFrameworkStores<ApplicationDbContext>();
 
-			services.AddScoped<AuthenticationStateProvider, IdentityService>();
-
 			services.AddRazorPages(o =>
 			{
 				o.Conventions.ConfigureFilter(new IgnoreAntiforgeryTokenAttribute());
 			});
 			services.AddServerSideBlazor();
-			
+
+			services.AddHttpContextAccessor();
+			services.AddScoped<HttpContextAccessor>();
+			services.AddHttpClient();
+			services.AddScoped<HttpClient>();
+
 			// Discord bot singletons
 			services.AddSingleton(_client);
 			services.AddSingleton<CommandService>();
@@ -111,6 +123,7 @@ namespace DiscordTopRPG
 
 			app.UseAuthentication();
 			app.UseAuthorization();
+			app.UseCookiePolicy();
 
 			app.UseEndpoints(endpoints =>
 			{
