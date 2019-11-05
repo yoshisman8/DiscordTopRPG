@@ -43,40 +43,35 @@ namespace DiscordTopRPG
 				options.UseSqlServer(
 					Configuration.GetConnectionString("DefaultConnection")));
 
-			services.AddAuthorizationCore();
-			services.AddAuthentication(options =>
-			{
-				options.DefaultAuthenticateScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-				options.DefaultSignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-			})
 
-			.AddDiscord(x =>
-			{
-				x.ClientId = Configuration["AppId"];
-				x.ClientSecret = Configuration["AppSecret"];
-				x.Scope.Add("guilds");
-				x.Scope.Add("identify");
-				x.Validate();
-			})
-			
-			.AddCookie(options=> 
-			{
-				options.AccessDeniedPath = "/login";
-				options.LoginPath = "/login";
-				options.LogoutPath = "/logout";
-			});
+			//services.AddIdentity<ApplicationUser, IdentityRole>(options =>
+			// {
+			//	 options.User.RequireUniqueEmail = false;
+			//	 options.Password.RequireDigit = false;
+			//	 options.Password.RequiredLength = 4;
+			//	 options.Password.RequiredUniqueChars = 0;
+			//	 options.Password.RequireNonAlphanumeric = false;
+			//	 options.Password.RequireLowercase = false;
+			//	 options.Password.RequireUppercase = false;
+			//	 options.Lockout.AllowedForNewUsers = false;
+			// }).AddEntityFrameworkStores<ApplicationDbContext>();
 
-			services.AddIdentity<ApplicationUser,IdentityRole>(options =>
-			{
-				options.User.RequireUniqueEmail = false;
-				options.Password.RequireDigit = false;
-				options.Password.RequiredLength = 4;
-				options.Password.RequiredUniqueChars = 0;
-				options.Password.RequireNonAlphanumeric = false;
-				options.Password.RequireLowercase = false;
-				options.Password.RequireUppercase = false;
-				options.Lockout.AllowedForNewUsers = false;
-			}).AddEntityFrameworkStores<ApplicationDbContext>();
+			//services.AddAuthorization();
+
+			services
+				.AddAuthentication(x =>
+				{
+					x.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+				})
+				.AddCookie()
+				.AddDiscord(x =>
+				{
+					x.ClientId = Configuration["AppId"];
+					x.ClientSecret = Configuration["AppSecret"];
+					x.Scope.Add("guilds");
+					x.Scope.Add("identify");
+					x.Validate();
+				});
 
 			services.AddRazorPages(o =>
 			{
@@ -121,9 +116,9 @@ namespace DiscordTopRPG
 
 			app.UseRouting();
 
+			app.UseCookiePolicy();
 			app.UseAuthentication();
 			app.UseAuthorization();
-			app.UseCookiePolicy();
 
 			app.UseEndpoints(endpoints =>
 			{

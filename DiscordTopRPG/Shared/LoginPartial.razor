@@ -1,6 +1,4 @@
 ﻿@inject AuthenticationStateProvider AuthenticationStateProvider
-@inject SignInManager<ApplicationUser> SignInManager
-@inject UserManager<ApplicationUser> UserManager
 @inject DiscordSocketClient Client
 @inject NavigationManager NavigationManager
 
@@ -8,11 +6,11 @@
 	<Authorized>
 		<ul class="navbar-nav">
 			<li>
-				<a href="myhome"><img height="40" width="40" class="nav-item border-dark img-thumbnail rounded-circle" src="@avatar" /></a>
+				<a href="myhome"><img height="40" width="40" class="nav-item border-dark img-thumbnail rounded-circle" src="" /></a>
 			</li>
 
 			<li class="nav-item">
-				<a asp-action="Index" asp-controller="Sheet" class="nav-link">Hello @User.Identity.Name!</a>
+				<a asp-action="Index" asp-controller="Sheet" class="nav-link">Hello !</a>
 			</li>
 
 			<li>
@@ -34,24 +32,4 @@
 
 @code{
 
-	[CascadingParameter] Task<AuthenticationState> AuthenticationStateTask { get; set; }
-	private string avatar { get; set; }
-	private bool Loggedin { get; set; } = false;
-	private Microsoft.AspNetCore.Authentication.AuthenticationScheme discordprovider { get; set; }
-	private System.Security.Claims.ClaimsPrincipal User { get; set; }
-
-	protected override async void OnInitialized()
-	{
-		discordprovider = (await SignInManager.GetExternalAuthenticationSchemesAsync()).FirstOrDefault();
-		var User = (await AuthenticationStateTask).User;
-		if (SignInManager.IsSignedIn(User))
-		{
-			var user = Client.GetUser(UserManager.GetUserAsync(User).GetAwaiter().GetResult().DiscordId);
-
-			if (user != null)
-			{
-				avatar = user.GetAvatarUrl();
-			}
-		}
-	}
 }

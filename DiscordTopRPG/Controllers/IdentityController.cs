@@ -16,12 +16,12 @@ namespace DiscordTopRPG.Controllers
 	public class IdentityController : Controller
     {
 		private static ApplicationUser LoggedOutUser = new ApplicationUser { IsAuthenticated = false };
-		private SignInManager<ApplicationUser> signInManager { get; set; }
-        private UserManager<ApplicationUser> UserManager { get; set; }
-        public IdentityController(SignInManager<ApplicationUser> _signInManager, UserManager<ApplicationUser> _UserManager)
+		// private SignInManager<ApplicationUser> signInManager { get; set; }
+        // private UserManager<ApplicationUser> UserManager { get; set; }
+        public IdentityController()
         {
-            signInManager = _signInManager;
-            UserManager = _UserManager;
+            // signInManager = _signInManager;
+            // UserManager = _UserManager;
         }
 
 		[HttpGet("user")]
@@ -32,11 +32,11 @@ namespace DiscordTopRPG.Controllers
 		[HttpGet("login")]
 		public async Task login(string redirectUrl)
 		{
-			string redirectUri = Url.Action("ExternalLoginCallback","Identity",new { returnUrl = redirectUrl});
+			// string redirectUri = Url.Action("ExternalLoginCallback","Identity",new { returnUrl = redirectUrl});
 			
-			var properties = await signInManager.GetExternalAuthenticationSchemesAsync();
+			// var properties = await signInManager.GetExternalAuthenticationSchemesAsync();
 
-			await HttpContext.ChallengeAsync(properties.FirstOrDefault().Name, new AuthenticationProperties { RedirectUri = "/" });
+			await HttpContext.ChallengeAsync("Discord",new AuthenticationProperties { RedirectUri = redirectUrl });
 		}
 		[HttpGet("signout")]
 		public async Task<IActionResult> SignOut()
@@ -44,39 +44,29 @@ namespace DiscordTopRPG.Controllers
 			await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
 			return Redirect("~/");
 		}
-		//[AllowAnonymous]
-		//public ActionResult Login(string provider, string returnUrl)
-		//{
-		//	string redirecturl = Url.Action("ExternalLoginCallback", "Identity", new { returnUrl = returnUrl });
-
-		//	return Challenge(properties, provider);
-		//}
-		//[HttpGet("login")]
-		//[AllowAnonymous]
-		//public ActionResult LoginRedirect(string returnUrl)
-		//{
-		//	return Login("discord", returnUrl);
-		//}
 		[HttpPost("logout"), HttpGet("logout")]
 		[Authorize]
 		public async Task Logout()
 		{
 			await HttpContext.SignOutAsync(new AuthenticationProperties { RedirectUri = "/" });
+			HttpContext.Response.Redirect("/");
 		}
 
-		//[HttpGet("signin-discord")]
+		//[HttpGet("signin")]
 		//public async Task ExternalLoginCallback(string returnUrl)
 		//{
-		//	returnUrl = returnUrl ?? Url.Content("~/");
+		//	returnUrl = returnUrl ?? "/";
 		//	var info = await signInManager.GetExternalLoginInfoAsync();
 		//	if (info == null)
 		//	{
 		//		HttpContext.Response.Redirect(returnUrl);
+		//		return;
 		//	}
 		//	var result = await signInManager.ExternalLoginSignInAsync(info.LoginProvider, info.ProviderKey, true);
 		//	if (result.Succeeded)
 		//	{
 		//		HttpContext.Response.Redirect(returnUrl);
+		//		return;
 		//	}
 		//	else
 		//	{
@@ -93,6 +83,7 @@ namespace DiscordTopRPG.Controllers
 		//			await signInManager.SignInAsync(user, true);
 		//		}
 		//		HttpContext.Response.Redirect(returnUrl);
+		//		return;
 		//	}
 		//}
 	}
