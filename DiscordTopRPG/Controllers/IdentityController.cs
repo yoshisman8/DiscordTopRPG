@@ -32,17 +32,12 @@ namespace DiscordTopRPG.Controllers
 		[HttpGet("login")]
 		public async Task login(string redirectUrl)
 		{
-			// string redirectUri = Url.Action("ExternalLoginCallback","Identity",new { returnUrl = redirectUrl});
+			string redirectUri = "/sigin?redirectUrl="+redirectUrl;
 			
 			// var properties = await signInManager.GetExternalAuthenticationSchemesAsync();
 
-			await HttpContext.ChallengeAsync("Discord",new AuthenticationProperties { RedirectUri = redirectUrl });
-		}
-		[HttpGet("signout")]
-		public async Task<IActionResult> SignOut()
-		{
-			await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-			return Redirect("~/");
+			await HttpContext.ChallengeAsync("Discord",new AuthenticationProperties { RedirectUri = redirectUri });
+			
 		}
 		[HttpPost("logout"), HttpGet("logout")]
 		[Authorize]
@@ -51,7 +46,15 @@ namespace DiscordTopRPG.Controllers
 			await HttpContext.SignOutAsync(new AuthenticationProperties { RedirectUri = "/" });
 			HttpContext.Response.Redirect("/");
 		}
+		[HttpGet("sigin")]
+		public async Task SiginAsync(string redirectUrl)
+		{
+			redirectUrl = redirectUrl ?? "/";
 
+			// await HttpContext.SignInAsync("Discord", User);
+
+			HttpContext.Response.Redirect(redirectUrl);
+		}
 		//[HttpGet("signin")]
 		//public async Task ExternalLoginCallback(string returnUrl)
 		//{

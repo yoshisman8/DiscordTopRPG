@@ -44,25 +44,22 @@ namespace DiscordTopRPG
 					Configuration.GetConnectionString("DefaultConnection")));
 
 
-			//services.AddIdentity<ApplicationUser, IdentityRole>(options =>
-			// {
-			//	 options.User.RequireUniqueEmail = false;
-			//	 options.Password.RequireDigit = false;
-			//	 options.Password.RequiredLength = 4;
-			//	 options.Password.RequiredUniqueChars = 0;
-			//	 options.Password.RequireNonAlphanumeric = false;
-			//	 options.Password.RequireLowercase = false;
-			//	 options.Password.RequireUppercase = false;
-			//	 options.Lockout.AllowedForNewUsers = false;
-			// }).AddEntityFrameworkStores<ApplicationDbContext>();
+			services.AddIdentity<ApplicationUser, IdentityRole>(options =>
+			 {
+				 options.User.RequireUniqueEmail = false;
+				 options.Password.RequireDigit = false;
+				 options.Password.RequiredLength = 4;
+				 options.Password.RequiredUniqueChars = 0;
+				 options.Password.RequireNonAlphanumeric = false;
+				 options.Password.RequireLowercase = false;
+				 options.Password.RequireUppercase = false;
+				 options.Lockout.AllowedForNewUsers = false;
+			 }).AddEntityFrameworkStores<ApplicationDbContext>();
 
-			//services.AddAuthorization();
+			services.AddAuthorization();
 
 			services
-				.AddAuthentication(x =>
-				{
-					x.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-				})
+				.AddAuthentication()
 				.AddCookie()
 				.AddDiscord(x =>
 				{
