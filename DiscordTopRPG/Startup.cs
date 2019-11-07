@@ -54,7 +54,8 @@ namespace DiscordTopRPG
 				 options.Password.RequireLowercase = false;
 				 options.Password.RequireUppercase = false;
 				 options.Lockout.AllowedForNewUsers = false;
-			 }).AddEntityFrameworkStores<ApplicationDbContext>();
+			 }).AddEntityFrameworkStores<ApplicationDbContext>()
+			 .AddDefaultTokenProviders();
 
 			services.AddAuthorization();
 
