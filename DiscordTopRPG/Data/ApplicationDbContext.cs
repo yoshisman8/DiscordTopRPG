@@ -13,5 +13,10 @@ namespace DiscordTopRPG.Data
 		{
 		}
 
+		DbSet<Character> Characters { get; set; }
+		DbSet<Item> Items { get; set; }
+		DbSet<Skill> Skills { get; set; }
+		DbSet<SkillAction> Actions { get; set; }
+
 	}
 }
