@@ -20,7 +20,9 @@ namespace DiscordTopRPG.Services
             _discord = discord;
             _commands = commands;
 
-            _loggerFactory = ConfigureLogging(loggerFactory);
+			//_builder = ConfigureLogging(builder);
+
+			_loggerFactory = loggerFactory;
             _discordLogger = _loggerFactory.CreateLogger("discord");
             _commandsLogger = _loggerFactory.CreateLogger("commands");
 
@@ -28,13 +30,13 @@ namespace DiscordTopRPG.Services
             _commands.Log += LogCommand;
         }
 
-        private ILoggerFactory ConfigureLogging(ILoggerFactory factory)
-        {
-            factory.AddConsole();
-            return factory;
-        }
+		//private ILoggingBuilder ConfigureLogging(ILoggingBuilder factory)
+		//{
+		//	factory.AddConsole();
+		//	return factory;
+		//}
 
-        private Task LogDiscord(LogMessage message)
+		private Task LogDiscord(LogMessage message)
         {
             _discordLogger.Log(
                 LogLevelFromSeverity(message.Severity),

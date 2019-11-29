@@ -1,0 +1,55 @@
+﻿@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject DiscordSocketClient Client
+@inject NavigationManager NavigationManager
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
+
+<AuthorizeView>
+	<Authorized>
+		<ul class="navbar-nav">
+			<li>
+				<a href="myhome"><img height="40" width="40" class="nav-item border-dark img-thumbnail rounded-circle" src="@Avatar" /></a>
+			</li>
+
+			<li class="nav-item">
+				<a asp-action="Index" asp-controller="Sheet" class="nav-link">Hello @context.User.Identity.Name!</a>
+			</li>
+
+			<li>
+				<form class="form-inline" action="logout">
+					<button type="submit" class="nav-item btn btn-burple">Logout</button>
+				</form>
+			</li>
+		</ul>
+	</Authorized>
+
+	<NotAuthorized>
+		<ul class="navbar-nav">
+			<li>
+				<a class="nav-item btn btn-burple" href="login?redirectUrl=@NavigationManager.ToBaseRelativePath(NavigationManager.BaseUri)">Log-in</a>
+			</li>
+		</ul>
+	</NotAuthorized>
+</AuthorizeView>
+
+@code{
+	[CascadingParameter]
+	private Task<AuthenticationState> authenticationState { get; set; }
+
+	private string Avatar { get; set; }
+
+	protected override async Task OnInitializedAsync()
+	{
+		var state = await authenticationState;
+		var user = state.User;
+
+		if (user.Identity.IsAuthenticated)
+		{
+			var appuser = await UserManager.GetUserAsync(user);
+			var discorduser = Client.GetUser(appuser.DiscordId);
+
+			Avatar = discorduser.GetAvatarUrl();
+		}
+	}
+	
+}

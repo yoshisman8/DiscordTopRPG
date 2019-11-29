@@ -8,7 +8,7 @@ using Discord.WebSocket;
 using Microsoft.Extensions.Configuration;
 using System.Linq;
 
-namespace ERA20.Services
+namespace DiscordTopRPG.Services
 {
     public class CommandHandlingService
     {
