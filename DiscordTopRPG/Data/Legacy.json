@@ -1,0 +1,113 @@
+{
+	"Character": [
+		{
+			"Name": "Level",
+			"Value": "1",
+			"MaxValue": ""
+		},
+		{
+			"Name": "MGT",
+			"Value": "",
+			"MaxValue": ""
+		},
+		{
+			"Name": "AGI",
+			"Value": "",
+			"MaxValue": ""
+		},
+		{
+			"Name": "PER",
+			"Value": "",
+			"MaxValue": ""
+		},
+		{
+			"Name": "CON",
+			"Value": "",
+			"MaxValue": ""
+		},
+		{
+			"Name": "MAG",
+			"Value": "",
+			"MaxValue": ""
+		},
+		{
+			"Name": "LCK",
+			"Value": "",
+			"MaxValue": ""
+		},
+		{
+			"Name": "HIT",
+			"Value": "",
+			"MaxValue": ""
+		},
+		{
+			"Name": "MGT-MOD",
+			"Value": "",
+			"MaxValue": ""
+		},
+		{
+			"Name": "AGI-MOD",
+			"Value": "",
+			"MaxValue": ""
+		},
+		{
+			"Name": "PER-MOD",
+			"Value": "",
+			"MaxValue": ""
+		},
+		{
+			"Name": "CON-MOD",
+			"Value": "",
+			"MaxValue": ""
+		},
+		{
+			"Name": "MAG-MOD",
+			"Value": "",
+			"MaxValue": ""
+		},
+		{
+			"Name": "LCK-MOD",
+			"Value": "",
+			"MaxValue": ""
+		},
+		{
+			"Name": "HP",
+			"Value": "",
+			"MaxValue": ""
+		},
+		{
+			"Name": "ARMOR",
+			"Value": "",
+			"MaxValue": ""
+		}
+	],
+	"Item": [
+		{
+			"Name": "Quantity",
+			"Value": "",
+			"MaxValue": ""
+		},
+		{
+			"Name": "Status",
+			"Value": "",
+			"MaxValue": ""
+		},
+		{
+			"Name": "Value",
+			"Value": "",
+			"MaxValue": ""
+		}
+	],
+	"Ability": [
+		{
+			"Name": "Frequency",
+			"Value": "",
+			"MaxValue": ""
+		},
+		{
+			"Name": "Active",
+			"Value": "",
+			"MaxValue": ""
+		}
+	]
+}
