@@ -7,32 +7,32 @@
 		},
 		{
 			"Name": "MGT",
-			"Value": "",
+			"Value": "0",
 			"MaxValue": ""
 		},
 		{
 			"Name": "AGI",
-			"Value": "",
+			"Value": "0",
 			"MaxValue": ""
 		},
 		{
 			"Name": "PER",
-			"Value": "",
+			"Value": "0",
 			"MaxValue": ""
 		},
 		{
 			"Name": "CON",
-			"Value": "",
+			"Value": "0",
 			"MaxValue": ""
 		},
 		{
 			"Name": "MAG",
-			"Value": "",
+			"Value": "0",
 			"MaxValue": ""
 		},
 		{
 			"Name": "LCK",
-			"Value": "",
+			"Value": "0",
 			"MaxValue": ""
 		},
 		{
@@ -76,7 +76,12 @@
 			"MaxValue": ""
 		},
 		{
-			"Name": "ARMOR",
+			"Name": "Armor",
+			"Value": "",
+			"MaxValue": ""
+		},
+		{
+			"Name": "Fort",
 			"Value": "",
 			"MaxValue": ""
 		}
