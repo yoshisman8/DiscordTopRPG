@@ -1,0 +1,25 @@
+﻿@page "/characters"
+@inject CharacterService Service
+@attribute [Authorize]
+<h3>My characters </h3>
+<div>
+	<button class="btn btn-success" @onclick="NewCharacter">New Character</button>
+</div>
+
+@code {
+
+	[CascadingParameter] Task<AuthenticationState> authenticationState { get; set; }
+	private ApplicationUser User { get; set; }
+	private List<Character> Characters { get; set; }
+
+	protected override async Task OnInitializedAsync()
+	{
+		var authstate = await authenticationState;
+		Characters = await Service.GetUserCharacters(authstate.User);
+	}
+
+	private async Task NewCharacter()
+	{
+		
+	}
+}

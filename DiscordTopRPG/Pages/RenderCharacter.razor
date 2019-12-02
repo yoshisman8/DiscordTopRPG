@@ -1,0 +1,21 @@
+﻿@page "/character/{id:int}"
+
+<CascadingValue Name="Character" Value="C">
+	<AuthorizeView>
+		@if (C == null)
+		{
+			<div class="d-flex justify-content-center">
+				<div class="spinner-border text-burple" role="status">
+					<span class="sr-only">Loading...</span>
+				</div>
+			</div>
+		}
+		else
+		{
+			
+		}
+	</AuthorizeView>
+</CascadingValue>
+@code{ 
+	[Parameter] public Character C { get; set; }
+}

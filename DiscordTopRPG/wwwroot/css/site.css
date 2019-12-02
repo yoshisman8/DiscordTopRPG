@@ -37,13 +37,18 @@ button.accept-policy {
 /* Sticky footer styles
 -------------------------------------------------- */
 html {
-  position: relative;
-  min-height: 100%;
+	position: relative;
+	min-height: 100%;
+	background-color: #2C2F33;
+	color: white;
 }
-
+/*div {
+	background-color: #2C2F33;
+	color: white;
+}*/
 body {
-  /* Margin bottom by footer height */
-  margin-bottom: 60px;
+	/* Margin bottom by footer height */
+	margin-bottom: 60px;
 }
 .footer {
   position: absolute;

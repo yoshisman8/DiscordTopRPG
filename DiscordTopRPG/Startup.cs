@@ -22,6 +22,11 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using System.Net.Http;
 using Microsoft.AspNetCore.Http;
+using Blazorise;
+using Microsoft.Extensions.Options;
+using Blazorise.Bootstrap;
+using Blazorise.Icons.FontAwesome;
+using LiteDB;
 
 namespace DiscordTopRPG
 {
@@ -82,6 +87,11 @@ namespace DiscordTopRPG
 			services.AddHttpClient();
 			services.AddScoped<HttpClient>();
 
+			services.AddBlazorise( Options =>
+			{
+				Options.ChangeTextOnKeyPress = true;
+			}).AddBootstrapProviders().AddFontAwesomeIcons();
+
 			// Discord bot singletons
 			services.AddSingleton(_client);
 			services.AddSingleton<CommandService>();
@@ -92,6 +102,8 @@ namespace DiscordTopRPG
 			services.AddSingleton<LogService>();
 			// Extra
 			services.AddSingleton<Random>();
+			services.AddSingleton(new LiteDatabase("database.db"));
+			services.AddSingleton<CharacterService>();
 		}
 
 		// This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

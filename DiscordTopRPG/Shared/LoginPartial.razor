@@ -7,28 +7,21 @@
 <AuthorizeView>
 	<Authorized>
 		<ul class="navbar-nav">
-			<li>
-				<a href="myhome"><img height="40" width="40" class="nav-item border-dark img-thumbnail rounded-circle" src="@Avatar" /></a>
-			</li>
+			<BarItem>
+				<img height="40" width="40" class="nav-item border-dark img-thumbnail rounded-circle" src="@Avatar" />
+				<span>Hello @context.User.Identity.Name!</span>
+			</BarItem>
 
-			<li class="nav-item">
-				<a asp-action="Index" asp-controller="Sheet" class="nav-link">Hello @context.User.Identity.Name!</a>
-			</li>
-
-			<li>
-				<form class="form-inline" action="logout">
-					<button type="submit" class="nav-item btn btn-burple">Logout</button>
-				</form>
-			</li>
+			<BarItem>
+				<Button Color="Blazorise.Color.Primary" @onclick="Logout">Logout</Button>
+			</BarItem>
 		</ul>
 	</Authorized>
 
 	<NotAuthorized>
-		<ul class="navbar-nav">
-			<li>
-				<a class="nav-item btn btn-burple" href="login?redirectUrl=@NavigationManager.ToBaseRelativePath(NavigationManager.BaseUri)">Log-in</a>
-			</li>
-		</ul>
+		<BarItem>
+			<Button Color="Blazorise.Color.Primary" @onclick="Login">Log-in with Discord</Button>
+		</BarItem>
 	</NotAuthorized>
 </AuthorizeView>
 
@@ -51,5 +44,12 @@
 			Avatar = discorduser.GetAvatarUrl();
 		}
 	}
-	
+	private async Task Login()
+	{
+		NavigationManager.NavigateTo("/login?redirectUrl=" + NavigationManager.ToBaseRelativePath(NavigationManager.BaseUri));
+	}
+	private async Task Logout()
+	{
+		NavigationManager.NavigateTo("/logout");
+	}
 }

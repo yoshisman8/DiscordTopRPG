@@ -1,9 +1,12 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Authentication;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Threading.Tasks;
+using Newtonsoft;
+using Newtonsoft.Json;
 
 namespace DiscordTopRPG.Data
 {
@@ -11,25 +14,53 @@ namespace DiscordTopRPG.Data
 	{
 		[Key]
 		public int Id { get; set; }
-		public bool Public { get; set; }
-		[ForeignKey("ApplicationUser")]
-		public string ApplicationUserId { get; set; }
-		public string Name { get; set; }
-		/// <summary>
-		/// All of the numbers that the system tracks
-		/// ie: ability scores, hp, armor, etc
-		/// </summary>
+		public bool Public { get; set; } = true;
+		public ulong Owner { get; set; }
+		public string Name { get; set; } = "Untitled Character";
+		public bool Legacy { get; set; } = false;
+		public string SheetJSON { get; set; }
+
+		[NotMapped]
 		public List<Property> Properties { get; set; } = new List<Property>();
-		/// <summary>
-		/// Individual actions that can be called by the user 
-		/// Mostly there to be pre-populated by the template with basic rolls
-		/// And for the user to make their own special rolls
-		/// </summary>
+
+		[NotMapped]
 		public List<Command> Macros { get; set; } = new List<Command>();
-		/// <summary>
-		/// List of attacks for quick rolling.
-		/// </summary>
+
+		[NotMapped]
+		public List<Actionable> Attacks { get; set; } = new List<Actionable>();
+
+		[NotMapped]
+		public List<Actionable> Abilities { get; set; } = new List<Actionable>();
+
+		[NotMapped]
+		public List<Actionable> Items { get; set; } = new List<Actionable>();
+
+		public void LoadAll()
+		{
+			var s = JsonConvert.DeserializeObject<Sheet>(SheetJSON);
+			Properties = s.Properties;
+			Macros = s.Macros;
+			Attacks = s.Attacks;
+			Abilities = s.Abilities;
+			Items = s.Items;
+		}
+		public void Save()
+		{
+			var s = new Sheet();
+			s.Properties = Properties;
+			s.Macros = Macros;
+			s.Attacks = Attacks;
+			s.Abilities = Abilities;
+			s.Items = Items;
+
+			SheetJSON = JsonConvert.SerializeObject(s);
+		}
+	}
+	public class Sheet {
+		public List<Property> Properties { get; set; } = new List<Property>();
+		public List<Command> Macros { get; set; } = new List<Command>();
 		public List<Actionable> Attacks { get; set; } = new List<Actionable>();
 		public List<Actionable> Abilities { get; set; } = new List<Actionable>();
+		public List<Actionable> Items { get; set; } = new List<Actionable>();
 	}
 }

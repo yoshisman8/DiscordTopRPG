@@ -1,12 +1,31 @@
 <CascadingAuthenticationState>
-    <Router AppAssembly="@typeof(Program).Assembly">
-        <Found Context="routeData">
-            <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />
-        </Found>
-        <NotFound>
-            <LayoutView Layout="@typeof(MainLayout)">
-                <p>Sorry, there's nothing at this address.</p>
-            </LayoutView>
-        </NotFound>
-    </Router>
+    <Blazorise.ThemeProvider Theme="theme">
+		<Router AppAssembly="@typeof(Program).Assembly">
+			<Found Context="routeData">
+				<AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />
+			</Found>
+			<NotFound>
+				<LayoutView Layout="@typeof(MainLayout)">
+					<p>Sorry, there's nothing at this address.</p>
+				</LayoutView>
+			</NotFound>
+		</Router>
+	</Blazorise.ThemeProvider>
 </CascadingAuthenticationState>
+
+@code{
+	private Theme theme = new Theme
+	{
+		
+		ColorOptions = new ThemeColorOptions
+		{
+			Primary = "#7289DA",
+			Dark = "#2C2F33"
+		},
+		BackgroundOptions = new ThemeBackgroundOptions
+		{
+			Dark = "#2a2d32"
+		}
+	};
+
+}

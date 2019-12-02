@@ -43,19 +43,6 @@ namespace DiscordTopRPG.Controllers
 			await HttpContext.SignOutAsync(new AuthenticationProperties { RedirectUri = "/" });
 			HttpContext.Response.Redirect("/");
 		}
-		//[HttpGet("signin")]
-		//public async Task<IActionResult> SiginAsync(string redirectUrl)
-		//{
-		//	redirectUrl = redirectUrl ?? "/";
-
-		//	var info = await signInManager.GetExternalLoginInfoAsync();
-
-		//	await signInManager.ExternalLoginSignInAsync("Discord", info.ProviderKey , true);
-
-		//	// await HttpContext.SignInAsync("Discord", User);
-
-		//	return Redirect(redirectUrl);
-		//}
 		[HttpGet("signin")]
 		public async Task ExternalLoginCallback(string returnUrl)
 		{
