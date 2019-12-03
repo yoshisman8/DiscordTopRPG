@@ -9,9 +9,8 @@ namespace DiscordTopRPG.Data
 	{
 		public string Name { get; set; }
 		public string Description { get; set; }
-		public List<Property> Properties { get; set; }
+		public Dictionary<string, Property> Properties { get; set; } = new Dictionary<string, Property>();
 		public List<Command> Macros { get; set; } = new List<Command>();
-
-
+		public List<Modifier> Modifiers { get; set; } = new List<Modifier>();
 	}
 }

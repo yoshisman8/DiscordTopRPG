@@ -1,4 +1,5 @@
 ﻿using DiscordTopRPG.Data;
+using LiteDiscordIdentity;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
@@ -15,15 +16,15 @@ namespace DiscordTopRPG.Controllers
 	[ApiController]
 	public class IdentityController : Controller
     {
-		private SignInManager<ApplicationUser> signInManager { get; set; }
-        private UserManager<ApplicationUser> UserManager { get; set; }
-        public IdentityController(SignInManager<ApplicationUser> _signInManager, UserManager<ApplicationUser> _UserManager)
+		private SignInManager<DiscordUser> signInManager { get; set; }
+        private UserManager<DiscordUser> UserManager { get; set; }
+        public IdentityController(SignInManager<DiscordUser> _signInManager, UserManager<DiscordUser> _UserManager)
         {
             signInManager = _signInManager;
             UserManager = _UserManager;
         }
 		[HttpGet("login")]
-		public async Task<IActionResult> login(string redirectUrl)
+		public async Task<IActionResult> login([FromForm] string redirectUrl)
 		{
 			redirectUrl = redirectUrl ?? "/";
 
@@ -67,7 +68,8 @@ namespace DiscordTopRPG.Controllers
 					var user = await UserManager.FindByNameAsync(info.Principal.Identity.Name);
 					if (user == null)
 					{
-						user = new ApplicationUser(info.Principal.FindFirstValue(ClaimTypes.Name), Convert.ToUInt64(info.ProviderKey));
+						
+						user = new DiscordUser(Convert.ToUInt64(info.ProviderKey), info.Principal.FindFirstValue(ClaimTypes.Name),0000);
 						await UserManager.CreateAsync(user);
 					}
 					await UserManager.AddLoginAsync(user, info);

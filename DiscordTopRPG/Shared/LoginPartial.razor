@@ -1,8 +1,7 @@
 ﻿@inject AuthenticationStateProvider AuthenticationStateProvider
 @inject DiscordSocketClient Client
 @inject NavigationManager NavigationManager
-@inject SignInManager<ApplicationUser> SignInManager
-@inject UserManager<ApplicationUser> UserManager
+@inject UserManager<DiscordUser> UserManager
 
 <AuthorizeView>
 	<Authorized>
@@ -13,14 +12,19 @@
 			</BarItem>
 
 			<BarItem>
-				<Button Color="Blazorise.Color.Primary" @onclick="Logout">Logout</Button>
+				<Form action="logout" method="post">
+					<Button Type="ButtonType.Submit" Color="Blazorise.Color.Primary">Logout</Button>
+				</Form>
 			</BarItem>
 		</ul>
 	</Authorized>
 
 	<NotAuthorized>
 		<BarItem>
-			<Button Color="Blazorise.Color.Primary" @onclick="Login">Log-in with Discord</Button>
+			<Form action="login" method="get">
+				<input name="redirectUrl" value="@NavigationManager.ToBaseRelativePath(NavigationManager.BaseUri)" hidden />
+				<Button Type="ButtonType.Submit" Color="Blazorise.Color.Primary">Log-in with Discord</Button>
+			</Form>
 		</BarItem>
 	</NotAuthorized>
 </AuthorizeView>
@@ -39,17 +43,9 @@
 		if (user.Identity.IsAuthenticated)
 		{
 			var appuser = await UserManager.GetUserAsync(user);
-			var discorduser = Client.GetUser(appuser.DiscordId);
+			var discorduser = Client.GetUser(appuser.Id);
 
 			Avatar = discorduser.GetAvatarUrl();
 		}
-	}
-	private async Task Login()
-	{
-		NavigationManager.NavigateTo("/login?redirectUrl=" + NavigationManager.ToBaseRelativePath(NavigationManager.BaseUri));
-	}
-	private async Task Logout()
-	{
-		NavigationManager.NavigateTo("/logout");
 	}
 }

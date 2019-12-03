@@ -1,32 +1,26 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 using System.Threading.Tasks;
+using System.Collections.Generic;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Authorization;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.UI;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
-using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Hosting;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using DiscordTopRPG.Data;
-using Discord.WebSocket;
-using Discord.Commands;
 using DiscordTopRPG.Services;
+using Discord.Commands;
+using Discord.WebSocket;
 using Discord.Addons.Interactive;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Authentication.Cookies;
-using System.Net.Http;
-using Microsoft.AspNetCore.Http;
 using Blazorise;
-using Microsoft.Extensions.Options;
 using Blazorise.Bootstrap;
 using Blazorise.Icons.FontAwesome;
 using LiteDB;
+using LiteDiscordIdentity;
 
 namespace DiscordTopRPG
 {
@@ -44,13 +38,9 @@ namespace DiscordTopRPG
 		// For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
 		public void ConfigureServices(IServiceCollection services)
 		{
-			services.AddDbContext<ApplicationDbContext>(options =>
-				options.UseSqlServer(
-					Configuration.GetConnectionString("DefaultConnection")));
 
-
-			services.AddIdentity<ApplicationUser, IdentityRole>(options =>
-			 {
+			services.AddIdentity<DiscordUser, DiscordRole>(options =>
+			{
 				 options.User.RequireUniqueEmail = false;
 				 options.Password.RequireDigit = false;
 				 options.Password.RequiredLength = 4;
@@ -59,10 +49,13 @@ namespace DiscordTopRPG
 				 options.Password.RequireLowercase = false;
 				 options.Password.RequireUppercase = false;
 				 options.Lockout.AllowedForNewUsers = false;
-			 }).AddEntityFrameworkStores<ApplicationDbContext>()
-			 .AddDefaultTokenProviders();
-
+			 }).AddDefaultTokenProviders();
 			services.AddAuthorization();
+
+			// Adding LiteDb Identity Storage classes
+			services.AddTransient<ILiteDbContext, LiteDbContext>();
+			services.AddTransient<IRoleStore<DiscordRole>, LiteDbRoleStore>();
+			services.AddTransient<IUserStore<DiscordUser>, LiteDbUserStore>();
 
 			services
 				.AddAuthentication()
@@ -102,7 +95,6 @@ namespace DiscordTopRPG
 			services.AddSingleton<LogService>();
 			// Extra
 			services.AddSingleton<Random>();
-			services.AddSingleton(new LiteDatabase("database.db"));
 			services.AddSingleton<CharacterService>();
 		}
 
