@@ -49,13 +49,13 @@ namespace DiscordTopRPG
 				 options.Password.RequireLowercase = false;
 				 options.Password.RequireUppercase = false;
 				 options.Lockout.AllowedForNewUsers = false;
-			 }).AddDefaultTokenProviders();
+			 }).AddUserStore<LiteDbUserStore>()
+			 .AddRoleStore<LiteDbRoleStore>()
+			 .AddDefaultTokenProviders();
 			services.AddAuthorization();
 
 			// Adding LiteDb Identity Storage classes
-			services.AddTransient<ILiteDbContext, LiteDbContext>();
-			services.AddTransient<IRoleStore<DiscordRole>, LiteDbRoleStore>();
-			services.AddTransient<IUserStore<DiscordUser>, LiteDbUserStore>();
+			services.AddSingleton<LiteDbContext>();
 
 			services
 				.AddAuthentication()

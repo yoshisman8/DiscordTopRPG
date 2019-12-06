@@ -5,18 +5,15 @@
 
 <AuthorizeView>
 	<Authorized>
-		<ul class="navbar-nav">
 			<BarItem>
 				<img height="40" width="40" class="nav-item border-dark img-thumbnail rounded-circle" src="@Avatar" />
-				<span>Hello @context.User.Identity.Name!</span>
+				<span class="text-light">Hello @context.User.Identity.Name!</span>
 			</BarItem>
-
 			<BarItem>
 				<Form action="logout" method="post">
 					<Button Type="ButtonType.Submit" Color="Blazorise.Color.Primary">Logout</Button>
 				</Form>
 			</BarItem>
-		</ul>
 	</Authorized>
 
 	<NotAuthorized>

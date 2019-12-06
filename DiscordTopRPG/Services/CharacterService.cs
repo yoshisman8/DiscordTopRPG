@@ -16,7 +16,7 @@ namespace DiscordTopRPG.Services
 	{
 		private LiteCollection<Character> Characters { get; set; }
 
-		public CharacterService(ILiteDbContext _context, IUserStore<DiscordUser> _manager)
+		public CharacterService(LiteDbContext _context)
 		{
 			Characters = _context.LiteDatabase.GetCollection<Character>("Characters");
 		}

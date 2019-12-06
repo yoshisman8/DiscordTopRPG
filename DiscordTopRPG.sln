@@ -5,7 +5,7 @@ VisualStudioVersion = 16.0.28729.10
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DiscordTopRPG", "DiscordTopRPG\DiscordTopRPG.csproj", "{A7E02CF9-4FE1-467A-8FCE-9FDB07426D98}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LiteDiscordIdentity", "LiteIdentity\LiteDiscordIdentity.csproj", "{E5E3CF46-9475-4B62-A4D3-6B3F2C14D158}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LiteDiscordIdentity", "LiteIdentity\LiteDiscordIdentity.csproj", "{E5E3CF46-9475-4B62-A4D3-6B3F2C14D158}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -39,8 +39,11 @@ button.accept-policy {
 html {
 	position: relative;
 	min-height: 100%;
-	/*background-color: #2C2F33;
-	color: white;*/
+	background-color: #2C2F33;
+}
+.main {
+	background-color: #2C2F33;
+	color: white;
 }
 /*div {
 	background-color: #2C2F33;

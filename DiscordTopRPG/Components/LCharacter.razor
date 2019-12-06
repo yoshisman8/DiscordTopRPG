@@ -1,0 +1,30 @@
+﻿<Row>
+	<Column ColumnSize="ColumnSize.Is2">
+		<Figure Size="FigureSize.Is24x24">
+			<FigureImage Source="@Parent.C.Properties["Thumbnail"].Value" />
+		</Figure>
+	</Column>
+	<Column ColumnSize="ColumnSize.Is5">
+		<InputText @bind-Value="Parent.C.Name" />
+	</Column>
+	<Column ColumnSize="ColumnSize.Is1">
+		<InputNumber @bind-Value="@(Parent.C.Properties["Level"].Value)" />
+	</Column>
+</Row>
+<Row class="row">
+	<Column ColumnSize="ColumnSize.Is4">
+		<Container>
+			
+		</Container>
+	</Column>
+	<Column ColumnSize="ColumnSize.Is10">
+		<div>
+
+		</div>
+	</Column>
+</Row>
+
+
+@code {
+	[CascadingParameter] RenderCharacter Parent { get; set; }
+}

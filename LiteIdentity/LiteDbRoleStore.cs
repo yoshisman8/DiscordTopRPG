@@ -16,7 +16,7 @@ namespace LiteDiscordIdentity
       private readonly LiteCollection<CancellationToken> _cancellationTokens;
       private readonly LiteCollection<DiscordRole> _roles;
 
-      public LiteDbRoleStore(ILiteDbContext dbContext)
+      public LiteDbRoleStore(LiteDbContext dbContext)
       {
          _roles = dbContext.LiteDatabase.GetCollection<DiscordRole>("roles");
          _cancellationTokens = dbContext.LiteDatabase.GetCollection<CancellationToken>("cancellationtokens");

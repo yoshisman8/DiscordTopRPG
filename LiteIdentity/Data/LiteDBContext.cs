@@ -5,7 +5,7 @@ using Microsoft.Extensions.Configuration;
 
 namespace LiteDiscordIdentity
 {
-	public class LiteDbContext : ILiteDbContext
+	public class LiteDbContext 
 	{
 		public LiteDbContext(IConfiguration configuration)
 		{

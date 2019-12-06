@@ -5,7 +5,30 @@
 <h3>My characters </h3>
 
 <div>
-	<button class="btn btn-success" @onclick="NewCharacter">New Character</button>
+	<Dropdown>
+		<Button Color="Blazorise.Color.Success" @onclick="NewCharacter">
+			<i class="fas fa-plus">
+				New Character
+			</i>
+		</Button>
+		<DropdownToggle IsSplit="true" />
+		<DropdownMenu>
+			<DropdownItem @onclick="NewLegacy">New Legacy Character</DropdownItem>
+		</DropdownMenu>
+	</Dropdown>
+	<hr />
+	@if (Characters == null)
+	{
+		<div class="d-flex justify-content-center">
+			<div class="spinner-border text-primary" role="status">
+				<span class="sr-only">Loading...</span>
+			</div>
+		</div>
+	}
+	else
+	{
+
+	}
 </div>
 
 @code {
@@ -22,6 +45,10 @@
 	}
 
 	private async Task NewCharacter()
+	{
+		
+	}
+	private async Task NewLegacy()
 	{
 		
 	}

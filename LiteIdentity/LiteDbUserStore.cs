@@ -27,7 +27,7 @@ namespace LiteDiscordIdentity
 
 		private readonly LiteCollection<DiscordUser> _users;
 
-		public LiteDbUserStore(ILiteDbContext dbContext)
+		public LiteDbUserStore(LiteDbContext dbContext)
 		{
 			_users = dbContext.LiteDatabase.GetCollection<DiscordUser>("users");
 			_cancellationTokens = dbContext.LiteDatabase.GetCollection<CancellationToken>("cancellationtokens");

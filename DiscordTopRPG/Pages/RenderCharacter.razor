@@ -1,6 +1,6 @@
 ﻿@page "/character/{id:int}"
 
-<CascadingValue Name="Character" Value="C">
+<CascadingValue Name="Character" Value="this">
 	<AuthorizeView>
 		@if (C == null)
 		{
@@ -12,10 +12,17 @@
 		}
 		else
 		{
-			
+			if (C.Legacy)
+			{
+				<LCharacter />
+			}
+			else
+			{
+				<Character />
+			}
 		}
 	</AuthorizeView>
 </CascadingValue>
 @code{ 
-	[Parameter] public Character C { get; set; }
+	[Parameter] public DiscordTopRPG.Data.Character C { get; set; }
 }
